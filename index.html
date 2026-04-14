@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Position Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3e;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --green: #22c55e;
+      --green-dim: #166534;
+      --red: #ef4444;
+      --red-dim: #7f1d1d;
+      --accent: #3b82f6;
+      --accent-dim: #1e3a5f;
+      --pill-bg: #252836;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ── Direction toggle ── */
+    .dir-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .dir-btn {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      letter-spacing: 0.04em;
+    }
+
+    .dir-btn.active-long {
+      background: var(--green-dim);
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    .dir-btn.active-short {
+      background: var(--red-dim);
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    /* ── Ticker row ── */
+    .ticker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .ticker-row label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .ticker-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1rem;
+      padding: 8px 10px;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .ticker-input:focus { border-color: var(--accent); }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ADR info row ── */
+    .adr-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      min-height: 32px;
+      flex-wrap: wrap;
+    }
+
+    .adr-badge {
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--pill-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    .autostop-pill {
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 4px 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--pill-bg);
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .autostop-pill:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .autostop-pill.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ── Input rows ── */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-row label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      width: 120px;
+      flex-shrink: 0;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1rem;
+      padding: 8px 10px;
+      outline: none;
+      min-width: 0;
+    }
+
+    .input-row input:focus { border-color: var(--accent); }
+
+    .step-btn {
+      width: 36px;
+      height: 36px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--pill-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .step-btn:active { background: var(--border); }
+
+    /* ── Output grid ── */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .output-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .output-card .label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .output-card .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .output-card .value.positive { color: var(--green); }
+    .output-card .value.negative { color: var(--red); }
+    .output-card .value.dim      { color: var(--muted); }
+
+    .output-card.hidden { display: none; }
+
+    /* ── Reset ── */
+    .reset-btn {
+      display: block;
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+    }
+
+    /* ── Placeholder text ── */
+    .placeholder {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Position Calculator</h1>
+
+<div class="card">
+
+  <!-- Direction -->
+  <div class="dir-toggle">
+    <button class="dir-btn" id="btn-long"  onclick="setDirection('long')">LONG</button>
+    <button class="dir-btn" id="btn-short" onclick="setDirection('short')">SHORT</button>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker-row">
+    <label>Ticker</label>
+    <input
+      class="ticker-input"
+      id="input-ticker"
+      type="text"
+      placeholder="AAPL"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      oninput="onTickerInput(this.value)"
+    >
+    <div class="spinner" id="spinner" style="display:none"></div>
+  </div>
+
+  <!-- ADR row -->
+  <div class="adr-row" id="adr-row">
+    <span class="adr-badge" id="adr-badge" style="display:none"></span>
+    <button
+      class="autostop-pill"
+      id="autostop-pill"
+      disabled
+      onclick="toggleAutoStop()"
+    >Day Low</button>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Inputs -->
+  <div class="input-group">
+    <div class="input-row">
+      <label>Account ($)</label>
+      <input
+        id="input-equity"
+        type="text"
+        inputmode="decimal"
+        placeholder="40000"
+        oninput="onField('accountEquity', this.value)"
+      >
+    </div>
+    <div class="input-row">
+      <label>Risk %</label>
+      <button class="step-btn" onclick="step('riskPct', -0.1)">▼</button>
+      <input
+        id="input-risk"
+        type="text"
+        inputmode="decimal"
+        placeholder="0.33"
+        oninput="onField('riskPct', this.value)"
+      >
+      <button class="step-btn" onclick="step('riskPct', 0.1)">▲</button>
+    </div>
+    <div class="input-row">
+      <label>Entry</label>
+      <button class="step-btn" onclick="step('entry', -0.1)">▼</button>
+      <input
+        id="input-entry"
+        type="text"
+        inputmode="decimal"
+        placeholder="0.00"
+        oninput="onField('entry', this.value)"
+      >
+      <button class="step-btn" onclick="step('entry', 0.1)">▲</button>
+    </div>
+    <div class="input-row">
+      <label>Stop Loss</label>
+      <button class="step-btn" onclick="step('stopLoss', -0.1)">▼</button>
+      <input
+        id="input-stop"
+        type="text"
+        inputmode="decimal"
+        placeholder="0.00"
+        oninput="onField('stopLoss', this.value)"
+      >
+      <button class="step-btn" onclick="step('stopLoss', 0.1)">▲</button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Outputs -->
+  <div id="outputs-placeholder" class="placeholder">Enter entry and stop loss to calculate</div>
+
+  <div class="output-grid" id="output-grid" style="display:none">
+    <div class="output-card">
+      <div class="label">Shares</div>
+      <div class="value" id="out-shares">—</div>
+    </div>
+    <div class="output-card">
+      <div class="label">Risk $</div>
+      <div class="value" id="out-risk">—</div>
+    </div>
+    <div class="output-card">
+      <div class="label">Total</div>
+      <div class="value" id="out-total">—</div>
+    </div>
+    <div class="output-card">
+      <div class="label">Pivot %</div>
+      <div class="value" id="out-pivot">—</div>
+    </div>
+    <div class="output-card" id="card-adr-pct" style="display:none">
+      <div class="label">ADR %</div>
+      <div class="value dim" id="out-adr-pct">—</div>
+    </div>
+    <div class="output-card" id="card-xadr" style="display:none">
+      <div class="label">xADR</div>
+      <div class="value dim" id="out-xadr">—</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <button class="reset-btn" onclick="resetAll()">Reset</button>
+
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────
+  const API_BASE = 'https://your-app.onrender.com'; // update after deploying backend
+
+  // ── State ────────────────────────────────────────────────────────────────
+  const DEFAULT_STATE = {
+    direction:     'long',
+    accountEquity: '40000',
+    riskPct:       '0.33',
+    entry:         '',
+    stopLoss:      '',
+    ticker:        '',
+    adrData:       null,
+    adrLoading:    false,
+    useAutoStop:   false,
+  };
+
+  const state = { ...DEFAULT_STATE };
+
+  function setState(patch) {
+    Object.assign(state, patch);
+    render();
+  }
+
+  // ── Computed ─────────────────────────────────────────────────────────────
+  function computeDerived(s) {
+    const equity = parseFloat(s.accountEquity);
+    const riskPct = parseFloat(s.riskPct);
+    const entry = parseFloat(s.entry);
+    const stop = parseFloat(s.stopLoss);
+
+    if (!equity || !riskPct || !entry || !stop || isNaN(equity) || isNaN(riskPct) || isNaN(entry) || isNaN(stop)) {
+      return null;
+    }
+
+    const riskDollars  = equity * (riskPct / 100);
+    const riskPerShare = s.direction === 'long' ? entry - stop : stop - entry;
+
+    if (riskPerShare <= 0) return null;
+
+    const quantity   = Math.floor(riskDollars / riskPerShare);
+    const totalValue = quantity * entry;
+    const pivotPct   = ((stop - entry) / entry) * 100;
+    const xADR       = s.adrData && pivotPct !== 0
+      ? s.adrData.adr_pct / Math.abs(pivotPct)
+      : null;
+
+    return { riskDollars, riskPerShare, quantity, totalValue, pivotPct, xADR };
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function render() {
+    // Auto-stop sync (mutate state directly — avoid re-entrant setState)
+    if (state.useAutoStop && state.adrData) {
+      state.stopLoss = state.direction === 'long'
+        ? String(state.adrData.day_low)
+        : String(state.adrData.day_high);
+    }
+
+    const d = computeDerived(state);
+
+    // Direction buttons
+    document.getElementById('btn-long').className  = 'dir-btn' + (state.direction === 'long'  ? ' active-long'  : '');
+    document.getElementById('btn-short').className = 'dir-btn' + (state.direction === 'short' ? ' active-short' : '');
+
+    // Ticker / spinner
+    setInputIfNotFocused('input-ticker', state.ticker);
+    document.getElementById('spinner').style.display = state.adrLoading ? 'block' : 'none';
+
+    // ADR badge
+    const adrBadge = document.getElementById('adr-badge');
+    if (state.adrData) {
+      adrBadge.textContent = `ADR ${state.adrData.adr_pct.toFixed(2)}%`;
+      adrBadge.style.display = 'inline-block';
+    } else {
+      adrBadge.style.display = 'none';
+    }
+
+    // Auto-stop pill
+    const pill = document.getElementById('autostop-pill');
+    const pillLabel = state.direction === 'long'
+      ? (state.adrData ? `Day Low $${state.adrData.day_low.toFixed(2)}` : 'Day Low')
+      : (state.adrData ? `Day High $${state.adrData.day_high.toFixed(2)}` : 'Day High');
+    pill.textContent = pillLabel;
+    pill.disabled = !state.adrData;
+    pill.className = 'autostop-pill' + (state.useAutoStop ? ' active' : '');
+
+    // Input fields
+    setInputIfNotFocused('input-equity', state.accountEquity);
+    setInputIfNotFocused('input-risk',   state.riskPct);
+    setInputIfNotFocused('input-entry',  state.entry);
+    setInputIfNotFocused('input-stop',   state.stopLoss);
+
+    // Outputs
+    const placeholder = document.getElementById('outputs-placeholder');
+    const grid = document.getElementById('output-grid');
+
+    if (!d) {
+      placeholder.style.display = 'block';
+      grid.style.display = 'none';
+    } else {
+      placeholder.style.display = 'none';
+      grid.style.display = 'grid';
+
+      document.getElementById('out-shares').textContent = d.quantity.toLocaleString();
+      document.getElementById('out-risk').textContent   = '$' + fmt(d.riskDollars);
+      document.getElementById('out-total').textContent  = '$' + fmt(d.totalValue);
+
+      const pivotEl = document.getElementById('out-pivot');
+      pivotEl.textContent = d.pivotPct.toFixed(2) + '%';
+      pivotEl.className   = 'value ' + (d.pivotPct < 0 ? 'negative' : 'positive');
+
+      // ADR % card
+      const cardAdr = document.getElementById('card-adr-pct');
+      if (state.adrData) {
+        cardAdr.style.display = 'block';
+        document.getElementById('out-adr-pct').textContent = state.adrData.adr_pct.toFixed(2) + '%';
+      } else {
+        cardAdr.style.display = 'none';
+      }
+
+      // xADR card
+      const cardXadr = document.getElementById('card-xadr');
+      if (d.xADR !== null) {
+        cardXadr.style.display = 'block';
+        document.getElementById('out-xadr').textContent = d.xADR.toFixed(1) + 'x';
+      } else {
+        cardXadr.style.display = 'none';
+      }
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function fmt(n) {
+    return n >= 1000
+      ? n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+      : n.toFixed(2);
+  }
+
+  function setInputIfNotFocused(id, value) {
+    const el = document.getElementById(id);
+    if (document.activeElement !== el) el.value = value;
+  }
+
+  // ── Event handlers ───────────────────────────────────────────────────────
+  function setDirection(dir) {
+    setState({ direction: dir, useAutoStop: false });
+  }
+
+  function onField(field, value) {
+    setState({ [field]: value });
+  }
+
+  function step(field, delta) {
+    const current = parseFloat(state[field]) || 0;
+    const next = Math.round((current + delta) * 10) / 10;
+    setState({ [field]: String(next) });
+  }
+
+  function toggleAutoStop() {
+    if (!state.adrData) return;
+    setState({ useAutoStop: !state.useAutoStop });
+  }
+
+  function resetAll() {
+    Object.assign(state, { ...DEFAULT_STATE });
+    render();
+  }
+
+  // ── ADR fetch ─────────────────────────────────────────────────────────────
+  let debounceTimer = null;
+
+  function onTickerInput(value) {
+    setState({ ticker: value, adrData: null, adrLoading: false, useAutoStop: false });
+    clearTimeout(debounceTimer);
+    if (!value.trim()) return;
+    setState({ adrLoading: true });
+    debounceTimer = setTimeout(() => fetchADR(value.trim()), 400);
+  }
+
+  async function fetchADR(ticker) {
+    try {
+      const res = await fetch(`${API_BASE}/api/adr/${encodeURIComponent(ticker)}`);
+      if (!res.ok) {
+        setState({ adrData: null, adrLoading: false });
+        return;
+      }
+      const data = await res.json();
+      setState({ adrData: data, adrLoading: false });
+    } catch {
+      setState({ adrData: null, adrLoading: false });
+    }
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>
