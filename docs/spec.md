@@ -1,5 +1,7 @@
 # Position Sizing Calculator — Spec
 
+**Live app:** https://paperfish-blob.github.io/position-calculator/
+
 A risk-based position sizing tool that computes how many shares to buy (long) or sell short given a defined account risk.
 
 ---
@@ -122,16 +124,31 @@ Implemented by mutating `state.stopLoss` at the top of the `render()` function b
 
 ## Deployment
 
-### Backend
-1. Push to GitHub
-2. Create a new Web Service on [Render](https://render.com) or project on [Railway](https://railway.app)
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `python server.py` (or via `Procfile`)
-5. Note the deployed URL and update `API_BASE` in `index.html`
+### Backend — Render
 
-### Frontend
-1. Repo Settings → Pages → Source: `main` branch, root `/`
-2. GitHub Pages will serve `index.html` automatically
+1. Go to [render.com](https://render.com) and sign up / log in with GitHub
+2. Click **New** → **Web Service**
+3. Connect the `paperfish-blob/position-calculator` repo
+4. Configure:
+   - **Runtime:** Python 3
+   - **Build command:** `pip install -r requirements.txt`
+   - **Start command:** `python server.py` (or leave blank — `Procfile` handles it)
+   - **Instance type:** Free
+5. Click **Create Web Service** and wait ~2 min for the first deploy
+6. Copy the deployed URL (e.g. `https://position-calculator-api.onrender.com`)
+7. Update `API_BASE` in `index.html` to that URL, then commit and push
+
+> **Note:** The free Render tier spins down after 15 min of inactivity. The first ADR lookup after idle takes ~30 seconds to wake up.
+
+### Frontend — GitHub Pages
+
+1. Push the repo to GitHub
+2. Go to repo **Settings** → **Pages** (left sidebar)
+3. Under *Branch*, select `main` / `/ (root)` → **Save**
+4. Wait ~60 seconds — the app is live at:
+   **https://paperfish-blob.github.io/position-calculator/**
+
+> Subsequent pushes to `main` redeploy GitHub Pages automatically.
 
 ---
 

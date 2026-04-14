@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Live app
+https://paperfish-blob.github.io/position-calculator/
+
 ## Development
 
 ### Run the backend locally
