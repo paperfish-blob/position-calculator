@@ -8,20 +8,22 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --border: #2a2d3e;
-      --text: #e8eaf0;
-      --muted: #6b7280;
-      --green: #22c55e;
-      --green-dim: #166534;
-      --red: #ef4444;
-      --red-dim: #7f1d1d;
-      --accent: #3b82f6;
-      --accent-dim: #1e3a5f;
-      --pill-bg: #252836;
-      --radius: 10px;
-      --radius-sm: 6px;
+      --bg:           #f0f2f5;
+      --surface:      #ffffff;
+      --border:       #e2e4e9;
+      --text:         #111827;
+      --muted:        #6b7280;
+      --green:        #16a34a;
+      --green-bg:     #f0fdf4;
+      --green-border: #86efac;
+      --red:          #dc2626;
+      --red-bg:       #fff1f2;
+      --red-border:   #fecaca;
+      --accent:       #3b82f6;
+      --accent-bg:    #eff6ff;
+      --accent-border:#bfdbfe;
+      --radius:       12px;
+      --radius-sm:    8px;
     }
 
     body {
@@ -36,22 +38,59 @@
       padding: 24px 16px 48px;
     }
 
-    h1 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-
+    /* ── Card ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
       width: 100%;
       max-width: 480px;
+      overflow: hidden;
+    }
+
+    /* ── Header bar ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .reset-btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Body padding ── */
+    .card-body {
+      padding: 20px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 14px;
     }
 
     /* ── Direction toggle ── */
@@ -59,16 +98,16 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .dir-btn {
-      padding: 12px;
+      padding: 11px 8px;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      background: transparent;
+      background: var(--bg);
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -76,86 +115,154 @@
     }
 
     .dir-btn.active-long {
-      background: var(--green-dim);
+      background: var(--green-bg);
       color: var(--green);
-      border-color: var(--green);
+      border-color: var(--green-border);
     }
 
     .dir-btn.active-short {
-      background: var(--red-dim);
+      background: var(--red-bg);
       color: var(--red);
-      border-color: var(--red);
+      border-color: var(--red-border);
     }
 
-    /* ── Ticker row ── */
-    .ticker-row {
+    /* ── Field (label above input) ── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .field-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
+      gap: 8px;
     }
 
-    .ticker-row label {
-      color: var(--muted);
-      font-size: 0.85rem;
-      white-space: nowrap;
+    /* ── Input with stacked steppers ── */
+    .input-wrap {
+      position: relative;
+      display: flex;
     }
 
-    .ticker-input {
+    .input-wrap input {
       flex: 1;
-      background: var(--bg);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text);
       font-size: 1rem;
-      padding: 8px 10px;
-      text-transform: uppercase;
+      padding: 9px 40px 9px 12px;
       outline: none;
+      min-width: 0;
+      transition: border-color 0.15s;
     }
 
-    .ticker-input:focus { border-color: var(--accent); }
+    .input-wrap input:focus { border-color: var(--accent); }
+
+    .steppers {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      width: 32px;
+    }
+
+    .step-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.55rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s, color 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 22px;
+    }
+
+    .step-btn:first-child {
+      border-bottom: 1px solid var(--border);
+      border-radius: 0 var(--radius-sm) 0 0;
+    }
+
+    .step-btn:last-child {
+      border-radius: 0 0 var(--radius-sm) 0;
+    }
+
+    .step-btn:active { background: var(--bg); color: var(--text); }
+
+    /* ── Ticker row (input + spinner) ── */
+    .ticker-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker-wrap input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1rem;
+      padding: 9px 36px 9px 12px;
+      outline: none;
+      text-transform: uppercase;
+      transition: border-color 0.15s;
+    }
+
+    .ticker-wrap input:focus { border-color: var(--accent); }
 
     .spinner {
-      width: 16px;
-      height: 16px;
+      position: absolute;
+      right: 10px;
+      width: 14px;
+      height: 14px;
       border: 2px solid var(--border);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
+      pointer-events: none;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── ADR info row ── */
-    .adr-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 20px;
-      min-height: 32px;
-      flex-wrap: wrap;
+    /* ── Two-column stop/entry grid ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
     }
 
-    .adr-badge {
-      font-size: 0.8rem;
-      color: var(--muted);
-      background: var(--pill-bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 3px 10px;
-    }
+    .two-col .field { margin-bottom: 0; }
 
+    /* ── Auto-stop pill ── */
     .autostop-pill {
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       border-radius: 20px;
-      padding: 4px 12px;
+      padding: 2px 8px;
       cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--pill-bg);
-      color: var(--muted);
+      border: 1px solid var(--accent-border);
+      background: var(--accent-bg);
+      color: var(--accent);
       transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
     }
 
     .autostop-pill:disabled {
@@ -164,265 +271,236 @@
     }
 
     .autostop-pill.active {
-      background: var(--accent-dim);
-      color: var(--accent);
+      background: var(--accent);
+      color: #fff;
       border-color: var(--accent);
     }
-
-    /* ── Input rows ── */
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .input-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .input-row label {
-      font-size: 0.85rem;
-      color: var(--muted);
-      width: 120px;
-      flex-shrink: 0;
-    }
-
-    .input-row input {
-      flex: 1;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-size: 1rem;
-      padding: 8px 10px;
-      outline: none;
-      min-width: 0;
-    }
-
-    .input-row input:focus { border-color: var(--accent); }
-
-    .step-btn {
-      width: 36px;
-      height: 36px;
-      min-width: 44px;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--pill-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-size: 1rem;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.1s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .step-btn:active { background: var(--border); }
-
-    /* ── Output grid ── */
-    .output-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .output-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 8px;
-      text-align: center;
-    }
-
-    .output-card .label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-
-    .output-card .value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .output-card .value.positive { color: var(--green); }
-    .output-card .value.negative { color: var(--red); }
-    .output-card .value.dim      { color: var(--muted); }
-
-    .output-card.hidden { display: none; }
-
-    /* ── Reset ── */
-    .reset-btn {
-      display: block;
-      width: 100%;
-      padding: 11px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--muted);
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .reset-btn:hover { border-color: var(--text); color: var(--text); }
 
     /* ── Divider ── */
     .divider {
       border: none;
       border-top: 1px solid var(--border);
-      margin: 16px 0;
+      margin: 4px 0 20px;
     }
 
-    /* ── Placeholder text ── */
+    /* ── Results section ── */
+    .output-section { display: none; }
+    .output-section.visible { display: block; }
+
     .placeholder {
       text-align: center;
       color: var(--muted);
       font-size: 0.85rem;
-      padding: 12px 0;
+      padding: 12px 0 4px;
     }
+
+    /* Shares hero */
+    .shares-hero {
+      margin-bottom: 16px;
+    }
+
+    .shares-number {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .shares-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Result rows */
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .result-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    .result-value.positive { color: var(--green); }
+    .result-value.negative { color: var(--red); }
+    .result-value.accent   { color: var(--accent); }
   </style>
 </head>
 <body>
 
-<h1>Position Calculator</h1>
-
 <div class="card">
 
-  <!-- Direction -->
-  <div class="dir-toggle">
-    <button class="dir-btn" id="btn-long"  onclick="setDirection('long')">LONG</button>
-    <button class="dir-btn" id="btn-short" onclick="setDirection('short')">SHORT</button>
+  <!-- Header -->
+  <div class="card-header">
+    <span class="card-title">Position Sizing Calculator</span>
+    <button class="reset-btn" onclick="resetAll()">Reset</button>
   </div>
 
-  <!-- Ticker -->
-  <div class="ticker-row">
-    <label>Ticker</label>
-    <input
-      class="ticker-input"
-      id="input-ticker"
-      type="text"
-      placeholder="AAPL"
-      autocomplete="off"
-      autocorrect="off"
-      autocapitalize="characters"
-      spellcheck="false"
-      oninput="onTickerInput(this.value)"
-    >
-    <div class="spinner" id="spinner" style="display:none"></div>
-  </div>
+  <div class="card-body">
 
-  <!-- ADR row -->
-  <div class="adr-row" id="adr-row">
-    <span class="adr-badge" id="adr-badge" style="display:none"></span>
-    <button
-      class="autostop-pill"
-      id="autostop-pill"
-      disabled
-      onclick="toggleAutoStop()"
-    >Day Low</button>
-  </div>
+    <!-- Section label -->
+    <div class="section-label">&#9658; Trade Parameters</div>
 
-  <hr class="divider">
+    <!-- Direction toggle -->
+    <div class="dir-toggle">
+      <button class="dir-btn" id="btn-long"  onclick="setDirection('long')">&#9650; LONG</button>
+      <button class="dir-btn" id="btn-short" onclick="setDirection('short')">&#9660; SHORT</button>
+    </div>
 
-  <!-- Inputs -->
-  <div class="input-group">
-    <div class="input-row">
-      <label>Account ($)</label>
-      <input
-        id="input-equity"
-        type="text"
-        inputmode="decimal"
-        placeholder="40000"
-        oninput="onField('accountEquity', this.value)"
-      >
+    <!-- Ticker -->
+    <div class="field">
+      <div class="field-label">
+        Ticker
+        <div class="spinner" id="spinner" style="display:none; position:static; width:12px; height:12px;"></div>
+      </div>
+      <div class="ticker-wrap">
+        <input
+          id="input-ticker"
+          type="text"
+          placeholder="AAPL"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          oninput="onTickerInput(this.value)"
+        >
+      </div>
     </div>
-    <div class="input-row">
-      <label>Risk %</label>
-      <button class="step-btn" onclick="step('riskPct', -0.1)">▼</button>
-      <input
-        id="input-risk"
-        type="text"
-        inputmode="decimal"
-        placeholder="0.33"
-        oninput="onField('riskPct', this.value)"
-      >
-      <button class="step-btn" onclick="step('riskPct', 0.1)">▲</button>
-    </div>
-    <div class="input-row">
-      <label>Entry</label>
-      <button class="step-btn" onclick="step('entry', -0.1)">▼</button>
-      <input
-        id="input-entry"
-        type="text"
-        inputmode="decimal"
-        placeholder="0.00"
-        oninput="onField('entry', this.value)"
-      >
-      <button class="step-btn" onclick="step('entry', 0.1)">▲</button>
-    </div>
-    <div class="input-row">
-      <label>Stop Loss</label>
-      <button class="step-btn" onclick="step('stopLoss', -0.1)">▼</button>
-      <input
-        id="input-stop"
-        type="text"
-        inputmode="decimal"
-        placeholder="0.00"
-        oninput="onField('stopLoss', this.value)"
-      >
-      <button class="step-btn" onclick="step('stopLoss', 0.1)">▲</button>
-    </div>
-  </div>
 
-  <hr class="divider">
+    <!-- Account Equity -->
+    <div class="field">
+      <div class="field-label">Account Equity (USD)</div>
+      <div class="input-wrap">
+        <input
+          id="input-equity"
+          type="text"
+          inputmode="decimal"
+          placeholder="40000"
+          oninput="onField('accountEquity', this.value)"
+        >
+      </div>
+    </div>
 
-  <!-- Outputs -->
-  <div id="outputs-placeholder" class="placeholder">Enter entry and stop loss to calculate</div>
+    <!-- Risk % -->
+    <div class="field">
+      <div class="field-label">Risk Per Trade (%)</div>
+      <div class="input-wrap">
+        <input
+          id="input-risk"
+          type="text"
+          inputmode="decimal"
+          placeholder="0.33"
+          oninput="onField('riskPct', this.value)"
+        >
+        <div class="steppers">
+          <button class="step-btn" onclick="step('riskPct', 0.1)">▲</button>
+          <button class="step-btn" onclick="step('riskPct', -0.1)">▼</button>
+        </div>
+      </div>
+    </div>
 
-  <div class="output-grid" id="output-grid" style="display:none">
-    <div class="output-card">
-      <div class="label">Shares</div>
-      <div class="value" id="out-shares">—</div>
-    </div>
-    <div class="output-card">
-      <div class="label">Risk $</div>
-      <div class="value" id="out-risk">—</div>
-    </div>
-    <div class="output-card">
-      <div class="label">Total</div>
-      <div class="value" id="out-total">—</div>
-    </div>
-    <div class="output-card">
-      <div class="label">Pivot %</div>
-      <div class="value" id="out-pivot">—</div>
-    </div>
-    <div class="output-card" id="card-adr-pct" style="display:none">
-      <div class="label">ADR %</div>
-      <div class="value dim" id="out-adr-pct">—</div>
-    </div>
-    <div class="output-card" id="card-xadr" style="display:none">
-      <div class="label">xADR</div>
-      <div class="value dim" id="out-xadr">—</div>
-    </div>
-  </div>
+    <!-- Stop Loss + Entry (two columns) -->
+    <div class="two-col">
+      <div class="field">
+        <div class="field-label">
+          Stop Loss ($)
+          <button
+            class="autostop-pill"
+            id="autostop-pill"
+            disabled
+            onclick="toggleAutoStop()"
+          >Day Low</button>
+        </div>
+        <div class="input-wrap">
+          <input
+            id="input-stop"
+            type="text"
+            inputmode="decimal"
+            placeholder="0.00"
+            oninput="onField('stopLoss', this.value)"
+          >
+          <div class="steppers">
+            <button class="step-btn" onclick="step('stopLoss', 0.1)">▲</button>
+            <button class="step-btn" onclick="step('stopLoss', -0.1)">▼</button>
+          </div>
+        </div>
+      </div>
 
-  <hr class="divider">
+      <div class="field">
+        <div class="field-label">Entry Price ($)</div>
+        <div class="input-wrap">
+          <input
+            id="input-entry"
+            type="text"
+            inputmode="decimal"
+            placeholder="0.00"
+            oninput="onField('entry', this.value)"
+          >
+          <div class="steppers">
+            <button class="step-btn" onclick="step('entry', 0.1)">▲</button>
+            <button class="step-btn" onclick="step('entry', -0.1)">▼</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <button class="reset-btn" onclick="resetAll()">Reset</button>
+    <hr class="divider">
 
-</div>
+    <!-- Placeholder -->
+    <div id="outputs-placeholder" class="placeholder">Enter entry and stop loss to calculate</div>
+
+    <!-- Results -->
+    <div class="output-section" id="output-section">
+      <div class="shares-hero">
+        <div class="shares-number" id="out-shares">—</div>
+        <div class="shares-label">Shares to Trade</div>
+      </div>
+
+      <div class="result-row">
+        <span class="result-label">Risk $</span>
+        <span class="result-value" id="out-risk">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Total Position</span>
+        <span class="result-value" id="out-total">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Pivot %</span>
+        <span class="result-value" id="out-pivot">—</span>
+      </div>
+      <div class="result-row" id="card-adr-pct" style="display:none">
+        <span class="result-label">ADR %</span>
+        <span class="result-value accent" id="out-adr-pct">—</span>
+      </div>
+      <div class="result-row" id="card-xadr" style="display:none">
+        <span class="result-label">xADR</span>
+        <span class="result-value accent" id="out-xadr">—</span>
+      </div>
+    </div>
+
+  </div><!-- /card-body -->
+</div><!-- /card -->
 
 <script>
   // ── Config ──────────────────────────────────────────────────────────────
@@ -450,10 +528,10 @@
 
   // ── Computed ─────────────────────────────────────────────────────────────
   function computeDerived(s) {
-    const equity = parseFloat(s.accountEquity);
+    const equity  = parseFloat(s.accountEquity);
     const riskPct = parseFloat(s.riskPct);
-    const entry = parseFloat(s.entry);
-    const stop = parseFloat(s.stopLoss);
+    const entry   = parseFloat(s.entry);
+    const stop    = parseFloat(s.stopLoss);
 
     if (!equity || !riskPct || !entry || !stop || isNaN(equity) || isNaN(riskPct) || isNaN(entry) || isNaN(stop)) {
       return null;
@@ -491,22 +569,13 @@
 
     // Ticker / spinner
     setInputIfNotFocused('input-ticker', state.ticker);
-    document.getElementById('spinner').style.display = state.adrLoading ? 'block' : 'none';
-
-    // ADR badge
-    const adrBadge = document.getElementById('adr-badge');
-    if (state.adrData) {
-      adrBadge.textContent = `ADR ${state.adrData.adr_pct.toFixed(2)}%`;
-      adrBadge.style.display = 'inline-block';
-    } else {
-      adrBadge.style.display = 'none';
-    }
+    document.getElementById('spinner').style.display = state.adrLoading ? 'inline-block' : 'none';
 
     // Auto-stop pill
     const pill = document.getElementById('autostop-pill');
     const pillLabel = state.direction === 'long'
-      ? (state.adrData ? `Day Low $${state.adrData.day_low.toFixed(2)}` : 'Day Low')
-      : (state.adrData ? `Day High $${state.adrData.day_high.toFixed(2)}` : 'Day High');
+      ? (state.adrData ? `Day Low` : 'Day Low')
+      : (state.adrData ? `Day High` : 'Day High');
     pill.textContent = pillLabel;
     pill.disabled = !state.adrData;
     pill.className = 'autostop-pill' + (state.useAutoStop ? ' active' : '');
@@ -518,15 +587,15 @@
     setInputIfNotFocused('input-stop',   state.stopLoss);
 
     // Outputs
-    const placeholder = document.getElementById('outputs-placeholder');
-    const grid = document.getElementById('output-grid');
+    const placeholder   = document.getElementById('outputs-placeholder');
+    const outputSection = document.getElementById('output-section');
 
     if (!d) {
       placeholder.style.display = 'block';
-      grid.style.display = 'none';
+      outputSection.classList.remove('visible');
     } else {
       placeholder.style.display = 'none';
-      grid.style.display = 'grid';
+      outputSection.classList.add('visible');
 
       document.getElementById('out-shares').textContent = d.quantity.toLocaleString();
       document.getElementById('out-risk').textContent   = '$' + fmt(d.riskDollars);
@@ -534,22 +603,22 @@
 
       const pivotEl = document.getElementById('out-pivot');
       pivotEl.textContent = d.pivotPct.toFixed(2) + '%';
-      pivotEl.className   = 'value ' + (d.pivotPct < 0 ? 'negative' : 'positive');
+      pivotEl.className   = 'result-value ' + (d.pivotPct < 0 ? 'negative' : 'positive');
 
-      // ADR % card
+      // ADR % row
       const cardAdr = document.getElementById('card-adr-pct');
       if (state.adrData) {
-        cardAdr.style.display = 'block';
+        cardAdr.style.display = 'flex';
         document.getElementById('out-adr-pct').textContent = state.adrData.adr_pct.toFixed(2) + '%';
       } else {
         cardAdr.style.display = 'none';
       }
 
-      // xADR card
+      // xADR row
       const cardXadr = document.getElementById('card-xadr');
       if (d.xADR !== null) {
-        cardXadr.style.display = 'block';
-        document.getElementById('out-xadr').textContent = d.xADR.toFixed(1) + 'x';
+        cardXadr.style.display = 'flex';
+        document.getElementById('out-xadr').textContent = d.xADR.toFixed(2) + 'x';
       } else {
         cardXadr.style.display = 'none';
       }
@@ -559,7 +628,7 @@
   // ── Helpers ──────────────────────────────────────────────────────────────
   function fmt(n) {
     return n >= 1000
-      ? n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+      ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : n.toFixed(2);
   }
 
