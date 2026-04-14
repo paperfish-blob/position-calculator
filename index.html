@@ -147,40 +147,38 @@
 
     /* ── Input with stacked steppers ── */
     .input-wrap {
-      position: relative;
       display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color 0.15s;
     }
+
+    .input-wrap:focus-within { border-color: var(--accent); }
 
     .input-wrap input {
       flex: 1;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
+      border: none;
       color: var(--text);
       font-size: 1rem;
-      padding: 9px 40px 9px 12px;
+      padding: 9px 12px;
       outline: none;
       min-width: 0;
-      transition: border-color 0.15s;
     }
 
-    .input-wrap input:focus { border-color: var(--accent); }
-
     .steppers {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
       display: flex;
       flex-direction: column;
       width: 32px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
     }
 
     .step-btn {
       flex: 1;
       background: transparent;
       border: none;
-      border-left: 1px solid var(--border);
       color: var(--muted);
       font-size: 0.55rem;
       cursor: pointer;
@@ -192,14 +190,7 @@
       min-height: 22px;
     }
 
-    .step-btn:first-child {
-      border-bottom: 1px solid var(--border);
-      border-radius: 0 var(--radius-sm) 0 0;
-    }
-
-    .step-btn:last-child {
-      border-radius: 0 0 var(--radius-sm) 0;
-    }
+    .step-btn:first-child { border-bottom: 1px solid var(--border); }
 
     .step-btn:active { background: var(--bg); color: var(--text); }
 
@@ -284,8 +275,6 @@
     }
 
     /* ── Results section ── */
-    .output-section { display: none; }
-    .output-section.visible { display: block; }
 
     .placeholder {
       text-align: center;
@@ -420,9 +409,9 @@
       </div>
     </div>
 
-    <!-- Stop Loss + Entry (two columns) -->
-    <div class="two-col">
-      <div class="field">
+    <!-- Stop Loss + Entry (stacked) -->
+    <div>
+      <div class="field" style="margin-bottom:14px">
         <div class="field-label">
           Stop Loss ($)
           <button
@@ -447,7 +436,7 @@
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" style="margin-bottom:0">
         <div class="field-label">Entry Price ($)</div>
         <div class="input-wrap">
           <input
@@ -467,11 +456,8 @@
 
     <hr class="divider">
 
-    <!-- Placeholder -->
-    <div id="outputs-placeholder" class="placeholder">Enter entry and stop loss to calculate</div>
-
     <!-- Results -->
-    <div class="output-section" id="output-section">
+    <div id="output-section">
       <div class="shares-hero">
         <div class="shares-number" id="out-shares">—</div>
         <div class="shares-label">Shares to Trade</div>
@@ -489,11 +475,11 @@
         <span class="result-label">Pivot %</span>
         <span class="result-value" id="out-pivot">—</span>
       </div>
-      <div class="result-row" id="card-adr-pct" style="display:none">
+      <div class="result-row" id="card-adr-pct">
         <span class="result-label">ADR %</span>
         <span class="result-value accent" id="out-adr-pct">—</span>
       </div>
-      <div class="result-row" id="card-xadr" style="display:none">
+      <div class="result-row" id="card-xadr">
         <span class="result-label">xADR</span>
         <span class="result-value accent" id="out-xadr">—</span>
       </div>
@@ -586,43 +572,25 @@
     setInputIfNotFocused('input-entry',  state.entry);
     setInputIfNotFocused('input-stop',   state.stopLoss);
 
-    // Outputs
-    const placeholder   = document.getElementById('outputs-placeholder');
-    const outputSection = document.getElementById('output-section');
+    // Outputs — always visible, show — when not yet computable
+    document.getElementById('out-shares').textContent = d ? d.quantity.toLocaleString() : '—';
+    document.getElementById('out-risk').textContent   = d ? '$' + fmt(d.riskDollars)    : '—';
+    document.getElementById('out-total').textContent  = d ? '$' + fmt(d.totalValue)     : '—';
 
-    if (!d) {
-      placeholder.style.display = 'block';
-      outputSection.classList.remove('visible');
-    } else {
-      placeholder.style.display = 'none';
-      outputSection.classList.add('visible');
-
-      document.getElementById('out-shares').textContent = d.quantity.toLocaleString();
-      document.getElementById('out-risk').textContent   = '$' + fmt(d.riskDollars);
-      document.getElementById('out-total').textContent  = '$' + fmt(d.totalValue);
-
-      const pivotEl = document.getElementById('out-pivot');
+    const pivotEl = document.getElementById('out-pivot');
+    if (d) {
       pivotEl.textContent = d.pivotPct.toFixed(2) + '%';
       pivotEl.className   = 'result-value ' + (d.pivotPct < 0 ? 'negative' : 'positive');
-
-      // ADR % row
-      const cardAdr = document.getElementById('card-adr-pct');
-      if (state.adrData) {
-        cardAdr.style.display = 'flex';
-        document.getElementById('out-adr-pct').textContent = state.adrData.adr_pct.toFixed(2) + '%';
-      } else {
-        cardAdr.style.display = 'none';
-      }
-
-      // xADR row
-      const cardXadr = document.getElementById('card-xadr');
-      if (d.xADR !== null) {
-        cardXadr.style.display = 'flex';
-        document.getElementById('out-xadr').textContent = d.xADR.toFixed(2) + 'x';
-      } else {
-        cardXadr.style.display = 'none';
-      }
+    } else {
+      pivotEl.textContent = '—';
+      pivotEl.className   = 'result-value';
     }
+
+    document.getElementById('out-adr-pct').textContent =
+      state.adrData ? state.adrData.adr_pct.toFixed(2) + '%' : '—';
+
+    document.getElementById('out-xadr').textContent =
+      (d && d.xADR !== null) ? d.xADR.toFixed(2) + 'x' : '—';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
