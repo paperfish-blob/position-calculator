@@ -380,6 +380,7 @@
         >
         <button class="ticker-clear-btn" onclick="resetAll()" title="Reset">✕</button>
       </div>
+      <p id="ticker-error" style="display:none; font-size:0.72rem; color:var(--red); margin-top:4px;">Ticker not found</p>
     </div>
 
     <!-- Account Equity -->
@@ -507,6 +508,7 @@
     ticker:        '',
     adrData:       null,
     adrLoading:    false,
+    adrError:      false,
     useAutoStop:   false,
   };
 
@@ -558,9 +560,10 @@
     document.getElementById('btn-long').className  = 'dir-btn' + (state.direction === 'long'  ? ' active-long'  : '');
     document.getElementById('btn-short').className = 'dir-btn' + (state.direction === 'short' ? ' active-short' : '');
 
-    // Ticker / spinner
+    // Ticker / spinner / error
     setInputIfNotFocused('input-ticker', state.ticker);
     document.getElementById('spinner').style.display = state.adrLoading ? 'inline-block' : 'none';
+    document.getElementById('ticker-error').style.display = state.adrError ? 'block' : 'none';
 
     // Auto-stop pill
     const pill = document.getElementById('autostop-pill');
@@ -659,7 +662,7 @@
 
   function onTickerInput(value) {
     stopLoadTimer();
-    setState({ ticker: value, adrData: null, adrLoading: false, useAutoStop: false });
+    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false });
     clearTimeout(debounceTimer);
     if (!value.trim()) return;
     setState({ adrLoading: true });
@@ -672,14 +675,14 @@
       const res = await fetch(`${API_BASE}/api/adr/${encodeURIComponent(ticker)}`);
       stopLoadTimer();
       if (!res.ok) {
-        setState({ adrData: null, adrLoading: false });
+        setState({ adrData: null, adrLoading: false, adrError: true });
         return;
       }
       const data = await res.json();
-      setState({ adrData: data, adrLoading: false });
+      setState({ adrData: data, adrLoading: false, adrError: false });
     } catch {
       stopLoadTimer();
-      setState({ adrData: null, adrLoading: false });
+      setState({ adrData: null, adrLoading: false, adrError: true });
     }
   }
 
