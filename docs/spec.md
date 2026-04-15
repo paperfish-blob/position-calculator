@@ -154,6 +154,14 @@ Implemented by mutating `state.stopLoss` at the top of the `render()` function b
 
 ## Known Limitations
 
+### Manual Redeploy on Render
+If the live API is not reflecting recent `server.py` changes, trigger a manual redeploy:
+1. Go to [render.com](https://render.com) → your `position-calculator-api` service
+2. Click **Manual Deploy** → **Deploy latest commit**
+3. Wait ~2 min for the build to finish
+
+---
+
 ### Render Free Tier — Cold Start
 The backend is hosted on Render's free tier, which spins the server down after 15 minutes of inactivity. The first request after idle takes ~20–30 seconds to wake up. To mitigate this, `index.html` fires a silent warm-up ping to `/api/adr/SPY` on every page load so the server starts waking before the user types a ticker.
 
