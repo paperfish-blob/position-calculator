@@ -65,20 +65,7 @@
       color: var(--text);
     }
 
-    .reset-btn {
-      padding: 6px 14px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--muted);
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .reset-btn:hover { border-color: var(--text); color: var(--text); }
-
-    /* ── Body padding ── */
+/* ── Body padding ── */
     .card-body {
       padding: 20px;
     }
@@ -208,13 +195,30 @@
       border-radius: var(--radius-sm);
       color: var(--text);
       font-size: 1rem;
-      padding: 9px 36px 9px 12px;
+      padding: 9px 32px 9px 12px;
       outline: none;
       text-transform: uppercase;
       transition: border-color 0.15s;
     }
 
     .ticker-wrap input:focus { border-color: var(--accent); }
+
+    .ticker-clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ticker-clear-btn:hover { color: var(--text); }
 
     .spinner {
       position: absolute;
@@ -343,7 +347,6 @@
   <!-- Header -->
   <div class="card-header">
     <span class="card-title">Position Sizing Calculator</span>
-    <button class="reset-btn" onclick="resetAll()">Reset</button>
   </div>
 
   <div class="card-body">
@@ -375,6 +378,7 @@
           spellcheck="false"
           oninput="onTickerInput(this.value)"
         >
+        <button class="ticker-clear-btn" onclick="resetAll()" title="Reset">✕</button>
       </div>
     </div>
 
