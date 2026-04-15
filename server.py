@@ -34,6 +34,7 @@ def compute_adr(ticker: str) -> dict:
     adr_pct = float(((df['High'] - df['Low']) / df['Close'] * 100).mean())
     day_low = float(df.iloc[-1]['Low'])
     day_high = float(df.iloc[-1]['High'])
+    current_price = float(df.iloc[-1]['Close'])
 
     data = {
         'ticker': ticker,
@@ -41,6 +42,7 @@ def compute_adr(ticker: str) -> dict:
         'adr_pct': round(adr_pct, 4),
         'day_low': round(day_low, 4),
         'day_high': round(day_high, 4),
+        'current_price': round(current_price, 4),
     }
     CACHE[ticker] = {'expires': now + CACHE_TTL, 'data': data}
     return data

@@ -443,7 +443,15 @@
       </div>
 
       <div class="field" style="margin-bottom:0">
-        <div class="field-label">Entry Price ($)</div>
+        <div class="field-label">
+          Entry Price ($)
+          <button
+            class="autostop-pill"
+            id="autoentry-pill"
+            disabled
+            onclick="toggleAutoEntry()"
+          >Last</button>
+        </div>
         <div class="input-wrap">
           <input
             id="input-entry"
@@ -514,6 +522,7 @@
     adrLoading:    false,
     adrError:      false,
     useAutoStop:   false,
+    useAutoEntry:  false,
   };
 
   const state = { ...DEFAULT_STATE };
@@ -559,6 +568,11 @@
         : String(state.adrData.day_high);
     }
 
+    // Auto-entry sync
+    if (state.useAutoEntry && state.adrData) {
+      state.entry = String(state.adrData.current_price);
+    }
+
     const d = computeDerived(state);
 
     // Direction buttons
@@ -572,12 +586,15 @@
 
     // Auto-stop pill
     const pill = document.getElementById('autostop-pill');
-    const pillLabel = state.direction === 'long'
-      ? (state.adrData ? `Day Low` : 'Day Low')
-      : (state.adrData ? `Day High` : 'Day High');
-    pill.textContent = pillLabel;
+    pill.textContent = state.direction === 'long' ? 'Day Low' : 'Day High';
     pill.disabled = !state.adrData;
     pill.className = 'autostop-pill' + (state.useAutoStop ? ' active' : '');
+
+    // Auto-entry pill
+    const entryPill = document.getElementById('autoentry-pill');
+    entryPill.textContent = 'Last';
+    entryPill.disabled = !state.adrData;
+    entryPill.className = 'autostop-pill' + (state.useAutoEntry ? ' active' : '');
 
     // Input fields
     setInputIfNotFocused('input-equity', state.accountEquity);
@@ -621,7 +638,7 @@
 
   // ── Event handlers ───────────────────────────────────────────────────────
   function setDirection(dir) {
-    setState({ direction: dir, useAutoStop: false });
+    setState({ direction: dir, useAutoStop: false, useAutoEntry: false });
   }
 
   function onField(field, value) {
@@ -637,6 +654,11 @@
   function toggleAutoStop() {
     if (!state.adrData) return;
     setState({ useAutoStop: !state.useAutoStop });
+  }
+
+  function toggleAutoEntry() {
+    if (!state.adrData) return;
+    setState({ useAutoEntry: !state.useAutoEntry });
   }
 
   function resetAll() {
@@ -668,7 +690,7 @@
 
   function onTickerInput(value) {
     stopLoadTimer();
-    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false });
+    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false, useAutoEntry: false });
     clearTimeout(debounceTimer);
     if (!value.trim()) return;
     setState({ adrLoading: true });
