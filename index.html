@@ -474,6 +474,10 @@
         <span class="result-value" id="out-risk">—</span>
       </div>
       <div class="result-row">
+        <span class="result-label">% of Capital</span>
+        <span class="result-value" id="out-capital-pct">—</span>
+      </div>
+      <div class="result-row">
         <span class="result-label">Total Position</span>
         <span class="result-value" id="out-total">—</span>
       </div>
@@ -535,14 +539,15 @@
 
     if (riskPerShare <= 0) return null;
 
-    const quantity   = Math.floor(riskDollars / riskPerShare);
-    const totalValue = quantity * entry;
-    const pivotPct   = ((stop - entry) / entry) * 100;
+    const quantity    = Math.floor(riskDollars / riskPerShare);
+    const totalValue  = quantity * entry;
+    const capitalPct  = (totalValue / equity) * 100;
+    const pivotPct    = ((stop - entry) / entry) * 100;
     const xADR       = s.adrData && pivotPct !== 0
       ? s.adrData.adr_pct / Math.abs(pivotPct)
       : null;
 
-    return { riskDollars, riskPerShare, quantity, totalValue, pivotPct, xADR };
+    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR };
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -583,6 +588,7 @@
     // Outputs — always visible, show — when not yet computable
     document.getElementById('out-shares').textContent = d ? d.quantity.toLocaleString() : '—';
     document.getElementById('out-risk').textContent   = d ? '$' + fmt(d.riskDollars)    : '—';
+    document.getElementById('out-capital-pct').textContent = d ? d.capitalPct.toFixed(1) + '%' : '—';
     document.getElementById('out-total').textContent  = d ? '$' + fmt(d.totalValue)     : '—';
 
     const pivotEl = document.getElementById('out-pivot');
