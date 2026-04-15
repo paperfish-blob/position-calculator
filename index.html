@@ -501,6 +501,10 @@
         <span class="result-label">xADR</span>
         <span class="result-value accent" id="out-xadr">—</span>
       </div>
+      <div class="result-row" id="card-early-stop">
+        <span class="result-label">½ Risk Stop</span>
+        <span class="result-value" id="out-early-stop">—</span>
+      </div>
     </div>
 
   </div><!-- /card-body -->
@@ -556,7 +560,11 @@
       ? s.adrData.adr_pct / Math.abs(pivotPct)
       : null;
 
-    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR };
+    const earlyStop = s.direction === 'long'
+      ? entry - riskPerShare / 2
+      : entry + riskPerShare / 2;
+
+    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, earlyStop };
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -622,6 +630,9 @@
 
     document.getElementById('out-xadr').textContent =
       (d && d.xADR !== null) ? d.xADR.toFixed(2) + 'x' : '—';
+
+    document.getElementById('out-early-stop').textContent =
+      d ? '$' + fmt(d.earlyStop) : '—';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────

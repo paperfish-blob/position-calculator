@@ -176,6 +176,13 @@ The schedule (`*/8 * * * *`) keeps well under Render's 15-minute threshold, acco
 
 To test it manually: go to repo → **Actions** → "Keep Render Backend Alive" → **Run workflow**.
 
+#### Verifying the schedule
+Scheduled runs appear in the **Actions** tab with timestamps — you should see entries ~8 minutes apart. Note that GitHub Actions cron schedules are often delayed on newly pushed workflows, sometimes up to 15–30 minutes before the first scheduled run fires. After that initial delay, it settles into the 8-minute cadence.
+
+- GitHub doesn't guarantee exact cron timing — it queues jobs when runners are available
+- For low-traffic or new repos, the first few scheduled runs can be slow to appear
+- If no scheduled runs appear after ~1 hour, that would indicate a problem
+
 If cold starts are still unacceptable, upgrade to Render's paid tier ($7/mo) which has no spin-down.
 
 ## Local Development
