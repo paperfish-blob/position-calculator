@@ -1,0 +1,15 @@
+name: Keep Render Backend Alive
+
+on:
+  schedule:
+    - cron: '*/8 * * * *'    # every 8 minutes
+  workflow_dispatch:           # allow manual trigger for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping ADR endpoint
+        run: |
+          curl --fail --silent --show-error \
+            "https://position-calculator-api.onrender.com/api/adr/SPY"

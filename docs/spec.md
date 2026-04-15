@@ -165,9 +165,18 @@ If the live API is not reflecting recent `server.py` changes, trigger a manual r
 ### Render Free Tier — Cold Start
 The backend is hosted on Render's free tier, which spins the server down after 15 minutes of inactivity. The first request after idle takes ~20–30 seconds to wake up. To mitigate this, `index.html` fires a silent warm-up ping to `/api/adr/SPY` on every page load so the server starts waking before the user types a ticker.
 
-If cold starts are unacceptable, options are:
-- Sign up at [uptimerobot.com](https://uptimerobot.com) (free) and add a monitor that pings the Render URL every 5 minutes — the server never sleeps
-- Upgrade to Render's paid tier ($7/mo) which has no spin-down
+#### Keep-Alive Cron Job
+A GitHub Actions workflow (`.github/workflows/keep-alive.yml`) pings the backend every 8 minutes to prevent spin-down:
+
+```
+GET https://position-calculator-api.onrender.com/api/adr/SPY
+```
+
+The schedule (`*/8 * * * *`) keeps well under Render's 15-minute threshold, accounting for occasional GitHub Actions scheduling delays. Because the repo is public, this uses zero paid Actions minutes.
+
+To test it manually: go to repo → **Actions** → "Keep Render Backend Alive" → **Run workflow**.
+
+If cold starts are still unacceptable, upgrade to Render's paid tier ($7/mo) which has no spin-down.
 
 ## Local Development
 
