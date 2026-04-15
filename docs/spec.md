@@ -152,6 +152,15 @@ Implemented by mutating `state.stopLoss` at the top of the `render()` function b
 
 ---
 
+## Known Limitations
+
+### Render Free Tier — Cold Start
+The backend is hosted on Render's free tier, which spins the server down after 15 minutes of inactivity. The first request after idle takes ~20–30 seconds to wake up. To mitigate this, `index.html` fires a silent warm-up ping to `/api/adr/SPY` on every page load so the server starts waking before the user types a ticker.
+
+If cold starts are unacceptable, options are:
+- Sign up at [uptimerobot.com](https://uptimerobot.com) (free) and add a monitor that pings the Render URL every 5 minutes — the server never sleeps
+- Upgrade to Render's paid tier ($7/mo) which has no spin-down
+
 ## Local Development
 
 ```bash
