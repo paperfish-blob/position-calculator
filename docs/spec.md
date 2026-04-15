@@ -165,6 +165,29 @@ If the live API is not reflecting recent `server.py` changes, trigger a manual r
 ### Render Free Tier — Cold Start
 The backend is hosted on Render's free tier, which spins the server down after 15 minutes of inactivity. The first request after idle takes ~20–30 seconds to wake up. To mitigate this, `index.html` fires a silent warm-up ping to `/api/adr/SPY` on every page load so the server starts waking before the user types a ticker.
 
+#### Keep-Alive via UptimeRobot (recommended)
+
+UptimeRobot is a free external monitoring service that pings on a real clock — unlike GitHub Actions cron, which can be delayed by 15–30 minutes and is unreliable for sub-15-minute keep-alives.
+
+**Setup (one-time):**
+
+1. Sign up at [uptimerobot.com](https://uptimerobot.com) (free tier supports up to 50 monitors at 5-min intervals)
+2. Click **Add New Monitor** with these settings:
+   - **Monitor Type:** `HTTP(s)`
+   - **Friendly Name:** `Render Backend - Position Calculator`
+   - **URL:** `https://position-calculator-api.onrender.com/api/adr/SPY`
+   - **Monitoring Interval:** `5 minutes`
+3. Save — UptimeRobot will show a green "Up" status within the first ping cycle (~5 min)
+
+**Verification:**
+- Wait 5–10 minutes after setup and confirm green status on the UptimeRobot dashboard
+- Response time should appear in the dashboard (expected: <3s on a warm instance)
+- Open the live app and fetch a ticker — response should be ~200–500ms instead of the 30–60s cold-start delay
+
+> The GitHub Actions workflow (`.github/workflows/keep-alive.yml`) is kept for manual testing but its cron schedule is disabled — UptimeRobot fully replaces it.
+
+If cold starts are still unacceptable, upgrade to Render's paid tier ($7/mo) which has no spin-down.
+
 #### Keep-Alive Cron Job
 A GitHub Actions workflow (`.github/workflows/keep-alive.yml`) pings the backend every 8 minutes to prevent spin-down:
 
@@ -182,8 +205,6 @@ Scheduled runs appear in the **Actions** tab with timestamps — you should see 
 - GitHub doesn't guarantee exact cron timing — it queues jobs when runners are available
 - For low-traffic or new repos, the first few scheduled runs can be slow to appear
 - If no scheduled runs appear after ~1 hour, that would indicate a problem
-
-If cold starts are still unacceptable, upgrade to Render's paid tier ($7/mo) which has no spin-down.
 
 ## Local Development
 
