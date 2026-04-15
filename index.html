@@ -362,6 +362,7 @@
       <div class="field-label">
         Ticker
         <div class="spinner" id="spinner" style="display:none; position:static; width:12px; height:12px;"></div>
+        <span id="load-timer" style="display:none; font-size:0.7rem; color:var(--muted); font-weight:500;"></span>
       </div>
       <div class="ticker-wrap">
         <input
@@ -632,8 +633,28 @@
 
   // ── ADR fetch ─────────────────────────────────────────────────────────────
   let debounceTimer = null;
+  let loadTimerInterval = null;
+
+  function startLoadTimer() {
+    const el = document.getElementById('load-timer');
+    const start = Date.now();
+    el.style.display = 'inline';
+    el.textContent = '0s';
+    clearInterval(loadTimerInterval);
+    loadTimerInterval = setInterval(() => {
+      el.textContent = Math.floor((Date.now() - start) / 1000) + 's';
+    }, 1000);
+  }
+
+  function stopLoadTimer() {
+    clearInterval(loadTimerInterval);
+    const el = document.getElementById('load-timer');
+    el.style.display = 'none';
+    el.textContent = '';
+  }
 
   function onTickerInput(value) {
+    stopLoadTimer();
     setState({ ticker: value, adrData: null, adrLoading: false, useAutoStop: false });
     clearTimeout(debounceTimer);
     if (!value.trim()) return;
@@ -642,8 +663,10 @@
   }
 
   async function fetchADR(ticker) {
+    startLoadTimer();
     try {
       const res = await fetch(`${API_BASE}/api/adr/${encodeURIComponent(ticker)}`);
+      stopLoadTimer();
       if (!res.ok) {
         setState({ adrData: null, adrLoading: false });
         return;
@@ -651,6 +674,7 @@
       const data = await res.json();
       setState({ adrData: data, adrLoading: false });
     } catch {
+      stopLoadTimer();
       setState({ adrData: null, adrLoading: false });
     }
   }
