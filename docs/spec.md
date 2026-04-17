@@ -17,17 +17,19 @@ A risk-based position sizing tool that computes how many shares to buy (long) or
 
 ## State
 
-| Variable       | Type                | Default    | Purpose                                          |
-|----------------|---------------------|------------|--------------------------------------------------|
-| `direction`    | `'long' \| 'short'` | `'long'`   | Trade direction toggle                           |
-| `accountEquity`| `string`            | `'40000'`  | Account size in USD                              |
-| `riskPct`      | `string`            | `'0.33'`   | Risk per trade as a % of equity                  |
-| `entry`        | `string`            | `''`       | Entry price per share                            |
-| `stopLoss`     | `string`            | `''`       | Stop loss price per share                        |
-| `ticker`       | `string`            | `''`       | Optional ticker symbol for ADR lookup            |
-| `adrData`      | `object \| null`    | `null`     | ADR response from backend (populated on lookup)  |
-| `adrLoading`   | `boolean`           | `false`    | Loading state while ADR fetch is in-flight       |
-| `useAutoStop`  | `boolean`           | `false`    | When enabled, syncs stop loss to day low/high    |
+| Variable       | Type                | Default    | Purpose                                             |
+|----------------|---------------------|------------|-----------------------------------------------------|
+| `direction`    | `'long' \| 'short'` | `'long'`   | Trade direction toggle                              |
+| `accountEquity`| `string`            | `'40000'`  | Account size in USD                                 |
+| `riskPct`      | `string`            | `'0.33'`   | Risk per trade as a % of equity                     |
+| `entry`        | `string`            | `''`       | Entry price per share                               |
+| `stopLoss`     | `string`            | `''`       | Stop loss price per share                           |
+| `ticker`       | `string`            | `''`       | Optional ticker symbol for ADR lookup               |
+| `adrData`      | `object \| null`    | `null`     | ADR response from backend (populated on lookup)     |
+| `adrLoading`   | `boolean`           | `false`    | Loading state while ADR fetch is in-flight          |
+| `adrError`     | `boolean`           | `false`    | True when last ADR fetch returned an error / 404    |
+| `useAutoStop`  | `boolean`           | `false`    | When enabled, syncs stop loss to day low/high       |
+| `useAutoEntry` | `boolean`           | `false`    | When enabled, syncs entry price to last close price |
 
 ---
 
@@ -41,7 +43,14 @@ riskPerShare = entry − stopLoss        (long)
              = stopLoss − entry        (short)
 quantity     = floor(riskDollars / riskPerShare)
 totalValue   = quantity × entry
+capitalPct   = (totalValue / accountEquity) × 100
 pivotPct     = (stopLoss − entry) / entry × 100
+thirdStop    = entry − riskPerShare / 3   (long)
+             = entry + riskPerShare / 3   (short)
+earlyStop    = entry − riskPerShare / 2       (long)
+             = entry + riskPerShare / 2       (short)
+twoThirdStop = entry − riskPerShare × 2 / 3  (long)
+             = entry + riskPerShare × 2 / 3  (short)
 ```
 
 ---
@@ -73,7 +82,8 @@ GET /api/adr/{ticker}
   "adr": 3.12,
   "adr_pct": 1.85,
   "day_low": 168.40,
-  "day_high": 172.80
+  "day_high": 172.80,
+  "current_price": 171.25
 }
 ```
 
@@ -87,38 +97,55 @@ GET /api/adr/{ticker}
 
 ---
 
-## Auto-Stop Feature
+## Auto-Stop / Auto-Entry Features
 
-When `useAutoStop` is toggled on and `adrData` is available:
-- **Long:** stop loss is automatically set to `adrData.day_low`
-- **Short:** stop loss is automatically set to `adrData.day_high`
+Both are applied by mutating state directly at the top of `render()` before computing derived values, avoiding re-entrant `setState` calls.
 
-Implemented by mutating `state.stopLoss` at the top of the `render()` function before computing derived values.
+### Auto-Stop (`useAutoStop`)
+
+When toggled on and `adrData` is available:
+- **Long:** `stopLoss` → `adrData.day_low`
+- **Short:** `stopLoss` → `adrData.day_high`
+
+Toggling direction resets `useAutoStop` to `false`.
+
+### Auto-Entry (`useAutoEntry`)
+
+When toggled on and `adrData` is available:
+- **Both directions:** `entry` → `adrData.current_price` (last close)
+
+Toggling direction resets `useAutoEntry` to `false`.
 
 ---
 
 ## Displayed Outputs
 
-| Field           | Shown when          | Value                                                     |
-|-----------------|---------------------|-----------------------------------------------------------|
-| Shares to Trade | Result is valid     | `floor(riskDollars / riskPerShare)`                       |
-| Risk $          | Result is valid     | Dollar risk amount                                        |
-| Total Position  | Result is valid     | Total position value at entry                             |
-| Pivot %         | Result is valid     | % distance from entry to stop                            |
-| ADR %           | ADR data available  | 20-day average daily range as % of close                  |
-| xADR            | Result + ADR valid  | `adr_pct / abs(pivotPct)` — how many ADRs the stop is away|
+| Field           | Shown when          | Value                                                      |
+|-----------------|---------------------|------------------------------------------------------------|
+| Shares to Trade | Result is valid     | `floor(riskDollars / riskPerShare)`                        |
+| Risk $          | Result is valid     | Dollar risk amount                                         |
+| % of Capital    | Result is valid     | `(totalValue / accountEquity) × 100`                       |
+| Total Position  | Result is valid     | Total position value at entry                              |
+| Pivot %         | Result is valid     | % distance from entry to stop (red if negative)            |
+| ADR %           | ADR data available  | 20-day average daily range as % of close                   |
+| xADR            | Result + ADR valid  | `adr_pct / abs(pivotPct)` — how many ADRs the stop is away |
+| ⅓ Risk Stop     | Result is valid     | Price at which one-third of the risk is realised (`thirdStop`) |
+| ½ Risk Stop     | Result is valid     | Price at which half the risk is realised (`earlyStop`)             |
+| ⅔ Risk Stop     | Result is valid     | Price at which two-thirds of the risk is realised (`twoThirdStop`) |
 
 ---
 
 ## UI Controls
 
-| Control               | Behavior                                                                 |
-|-----------------------|--------------------------------------------------------------------------|
-| Long / Short toggle   | Two-button grid; green for long, red for short                           |
-| Ticker input          | Debounced 400ms; triggers ADR fetch on change                            |
-| Stepper ▲ / ▼         | On Risk %, Entry, Stop Loss; increments by 0.1 (float-safe)             |
-| Day Low / High pill   | Toggles `useAutoStop`; label updates with direction; disabled without ADR|
-| Reset button          | Restores all fields to defaults                                          |
+| Control               | Behavior                                                                               |
+|-----------------------|----------------------------------------------------------------------------------------|
+| Long / Short toggle   | Two-button grid; green for long, red for short; resets both auto pills on change       |
+| Ticker input          | Debounced 400ms; triggers ADR fetch on change; clears adrData/adrError while typing    |
+| Load timer            | Shows elapsed seconds next to the spinner while an ADR fetch is in-flight              |
+| Stepper ▲ / ▼         | On Risk %, Entry, Stop Loss; increments by 0.1 (float-safe)                           |
+| Day Low / High pill   | Toggles `useAutoStop`; label is "Day Low" (long) / "Day High" (short); disabled without ADR |
+| Last pill             | Toggles `useAutoEntry`; sets entry to `current_price`; disabled without ADR            |
+| Reset (✕) button      | Clears the ticker field and restores all state to defaults                             |
 
 ---
 

@@ -501,9 +501,17 @@
         <span class="result-label">xADR</span>
         <span class="result-value accent" id="out-xadr">—</span>
       </div>
+      <div class="result-row" id="card-third-stop">
+        <span class="result-label">⅓ Risk Stop</span>
+        <span class="result-value" id="out-third-stop">—</span>
+      </div>
       <div class="result-row" id="card-early-stop">
         <span class="result-label">½ Risk Stop</span>
         <span class="result-value" id="out-early-stop">—</span>
+      </div>
+      <div class="result-row" id="card-two-third-stop">
+        <span class="result-label">⅔ Risk Stop</span>
+        <span class="result-value" id="out-two-third-stop">—</span>
       </div>
     </div>
 
@@ -560,11 +568,19 @@
       ? s.adrData.adr_pct / Math.abs(pivotPct)
       : null;
 
+    const thirdStop = s.direction === 'long'
+      ? entry - riskPerShare / 3
+      : entry + riskPerShare / 3;
+
     const earlyStop = s.direction === 'long'
       ? entry - riskPerShare / 2
       : entry + riskPerShare / 2;
 
-    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, earlyStop };
+    const twoThirdStop = s.direction === 'long'
+      ? entry - riskPerShare * 2 / 3
+      : entry + riskPerShare * 2 / 3;
+
+    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, thirdStop, earlyStop, twoThirdStop };
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -631,8 +647,14 @@
     document.getElementById('out-xadr').textContent =
       (d && d.xADR !== null) ? d.xADR.toFixed(2) + 'x' : '—';
 
+    document.getElementById('out-third-stop').textContent =
+      d ? '$' + fmt(d.thirdStop) : '—';
+
     document.getElementById('out-early-stop').textContent =
       d ? '$' + fmt(d.earlyStop) : '—';
+
+    document.getElementById('out-two-third-stop').textContent =
+      d ? '$' + fmt(d.twoThirdStop) : '—';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
