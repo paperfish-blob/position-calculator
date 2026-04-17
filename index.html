@@ -513,6 +513,18 @@
         <span class="result-label">⅔ Risk Stop</span>
         <span class="result-value" id="out-two-third-stop">—</span>
       </div>
+      <div class="result-row" id="card-adr-target">
+        <span class="result-label">Entry + ADR</span>
+        <span class="result-value" id="out-adr-target">—</span>
+      </div>
+      <div class="result-row" id="card-adr-target15">
+        <span class="result-label">Entry + ADR×1.5</span>
+        <span class="result-value" id="out-adr-target15">—</span>
+      </div>
+      <div class="result-row" id="card-adr-target2">
+        <span class="result-label">Entry + ADR×2</span>
+        <span class="result-value" id="out-adr-target2">—</span>
+      </div>
     </div>
 
   </div><!-- /card-body -->
@@ -580,7 +592,11 @@
       ? entry - riskPerShare * 2 / 3
       : entry + riskPerShare * 2 / 3;
 
-    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, thirdStop, earlyStop, twoThirdStop };
+    const adrTarget   = s.adrData ? entry * (1 + s.adrData.adr_pct / 100)       : null;
+    const adrTarget15 = s.adrData ? entry * (1 + s.adrData.adr_pct * 1.5 / 100) : null;
+    const adrTarget2  = s.adrData ? entry * (1 + s.adrData.adr_pct * 2   / 100) : null;
+
+    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, thirdStop, earlyStop, twoThirdStop, adrTarget, adrTarget15, adrTarget2 };
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -655,6 +671,15 @@
 
     document.getElementById('out-two-third-stop').textContent =
       d ? '$' + fmt(d.twoThirdStop) : '—';
+
+    document.getElementById('out-adr-target').textContent =
+      (d && d.adrTarget !== null) ? '$' + fmt(d.adrTarget) : '—';
+
+    document.getElementById('out-adr-target15').textContent =
+      (d && d.adrTarget15 !== null) ? '$' + fmt(d.adrTarget15) : '—';
+
+    document.getElementById('out-adr-target2').textContent =
+      (d && d.adrTarget2 !== null) ? '$' + fmt(d.adrTarget2) : '—';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────

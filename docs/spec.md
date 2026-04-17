@@ -51,6 +51,9 @@ earlyStop    = entry − riskPerShare / 2       (long)
              = entry + riskPerShare / 2       (short)
 twoThirdStop = entry − riskPerShare × 2 / 3  (long)
              = entry + riskPerShare × 2 / 3  (short)
+adrTarget    = entry × (1 + adr_pct / 100)         (requires adrData)
+adrTarget15  = entry × (1 + adr_pct × 1.5 / 100)  (requires adrData)
+adrTarget2   = entry × (1 + adr_pct × 2   / 100)  (requires adrData)
 ```
 
 ---
@@ -131,7 +134,10 @@ Toggling direction resets `useAutoEntry` to `false`.
 | xADR            | Result + ADR valid  | `adr_pct / abs(pivotPct)` — how many ADRs the stop is away |
 | ⅓ Risk Stop     | Result is valid     | Price at which one-third of the risk is realised (`thirdStop`) |
 | ½ Risk Stop     | Result is valid     | Price at which half the risk is realised (`earlyStop`)             |
-| ⅔ Risk Stop     | Result is valid     | Price at which two-thirds of the risk is realised (`twoThirdStop`) |
+| ⅔ Risk Stop     | Result is valid     | Price at which two-thirds of the risk is realised (`twoThirdStop`)  |
+| Entry + ADR     | Result + ADR valid  | Upside target: entry + 1× ADR (`adrTarget`)                        |
+| Entry + ADR×1.5 | Result + ADR valid  | Upside target: entry + 1.5× ADR (`adrTarget15`)                    |
+| Entry + ADR×2   | Result + ADR valid  | Upside target: entry + 2× ADR (`adrTarget2`)                       |
 
 ---
 
