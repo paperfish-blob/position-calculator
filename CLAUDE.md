@@ -33,10 +33,10 @@ curl http://localhost:8080/api/adr/AAPL
 Three files do all the work:
 
 ### `server.py`
-Pure Python stdlib HTTP server (`socketserver.ThreadingMixIn` + `TCPServer`). Single route: `GET /api/adr/{ticker}`. Uses `yfinance` to fetch 1 month of OHLCV, slices the last 20 rows, and returns ADR $, ADR %, `day_low`, and `day_high`. Results are cached in a module-level dict (`CACHE`) with a 5-minute TTL. Binds to `0.0.0.0:$PORT` so Render/Railway can inject the port via env.
+Pure Python stdlib HTTP server (`socketserver.ThreadingMixIn` + `TCPServer`). Single route: `GET /api/adr/{ticker}`. Uses `yfinance` to fetch 1 month of OHLCV, slices the last 20 rows, and returns ADR $, ADR %, `day_low`, `day_high`, and `current_price`. Results are cached in a module-level dict (`CACHE`) with a 5-minute TTL. Binds to `0.0.0.0:$PORT` so Render/Railway can inject the port via env.
 
 ### `index.html`
-Self-contained — all CSS and JS are inline, no build step, no external dependencies. State is a plain JS object (`state`). Every user interaction calls `setState(patch)` which merges the patch and calls `render()`. `render()` is a single function that rewrites all DOM nodes from scratch on every call. Computed values (shares, risk $, pivot %, xADR) are derived inside `render()` and never stored. The auto-stop effect (syncing `stopLoss` to `day_low`/`day_high`) is applied by mutating `state.stopLoss` directly at the top of `render()` before computing derived values — this avoids re-entrant `setState` calls.
+Self-contained — all CSS and JS are inline, no build step, no external dependencies. State is a plain JS object (`state`). Every user interaction calls `setState(patch)` which merges the patch and calls `render()`. `render()` is a single function that rewrites all DOM nodes from scratch on every call. Computed values (shares, risk $, % of capital, pivot %, xADR, fractional risk stops, ADR upside targets) are derived inside `render()` and never stored. Both the auto-stop effect (syncing `stopLoss` to `day_low`/`day_high`) and the auto-entry effect (syncing `entry` to `current_price`) are applied by mutating state directly at the top of `render()` before computing derived values — this avoids re-entrant `setState` calls.
 
 **`API_BASE` constant** (top of the `<script>` block) must point to the deployed backend URL. Change it to `http://localhost:8080` for local development.
 

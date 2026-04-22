@@ -30,6 +30,7 @@ A risk-based position sizing tool that computes how many shares to buy (long) or
 | `adrError`     | `boolean`           | `false`    | True when last ADR fetch returned an error / 404    |
 | `useAutoStop`  | `boolean`           | `false`    | When enabled, syncs stop loss to day low/high       |
 | `useAutoEntry` | `boolean`           | `false`    | When enabled, syncs entry price to last close price |
+| `useAutoHigh`  | `boolean`           | `false`    | When enabled, syncs entry price to day_high         |
 
 ---
 
@@ -117,7 +118,14 @@ Toggling direction resets `useAutoStop` to `false`.
 When toggled on and `adrData` is available:
 - **Both directions:** `entry` → `adrData.current_price` (last close)
 
-Toggling direction resets `useAutoEntry` to `false`.
+Toggling direction or activating Auto-High resets `useAutoEntry` to `false`.
+
+### Auto-High (`useAutoHigh`)
+
+When toggled on and `adrData` is available:
+- **Both directions:** `entry` → `adrData.day_high`
+
+Toggling direction or activating Auto-Entry resets `useAutoHigh` to `false`.
 
 ---
 
@@ -150,7 +158,8 @@ Toggling direction resets `useAutoEntry` to `false`.
 | Load timer            | Shows elapsed seconds next to the spinner while an ADR fetch is in-flight              |
 | Stepper ▲ / ▼         | On Risk %, Entry, Stop Loss; increments by 0.1 (float-safe)                           |
 | Day Low / High pill   | Toggles `useAutoStop`; label is "Day Low" (long) / "Day High" (short); disabled without ADR |
-| Last pill             | Toggles `useAutoEntry`; sets entry to `current_price`; disabled without ADR            |
+| Last pill             | Toggles `useAutoEntry`; sets entry to `current_price`; disabled without ADR; mutually exclusive with High pill |
+| High pill             | Toggles `useAutoHigh`; sets entry to `day_high`; disabled without ADR; mutually exclusive with Last pill      |
 | Reset (✕) button      | Clears the ticker field and restores all state to defaults                             |
 
 ---

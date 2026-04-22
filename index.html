@@ -65,6 +65,21 @@
       color: var(--text);
     }
 
+    .reset-btn {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .reset-btn:hover { color: var(--text); border-color: var(--muted); }
+
 /* ── Body padding ── */
     .card-body {
       padding: 20px;
@@ -300,6 +315,19 @@
       font-variant-numeric: tabular-nums;
     }
 
+    input.shares-number {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      padding: 0;
+      cursor: text;
+      font-family: inherit;
+      caret-color: currentColor;
+      text-align: inherit;
+    }
+    input.shares-number::placeholder { opacity: 0.35; }
+
     .shares-label {
       font-size: 0.7rem;
       font-weight: 700;
@@ -347,6 +375,7 @@
   <!-- Header -->
   <div class="card-header">
     <span class="card-title">Position Sizing Calculator</span>
+    <button class="reset-btn" onclick="resetAll()">Reset</button>
   </div>
 
   <div class="card-body">
@@ -451,6 +480,12 @@
             disabled
             onclick="toggleAutoEntry()"
           >Last</button>
+          <button
+            class="autostop-pill"
+            id="autohigh-pill"
+            disabled
+            onclick="toggleAutoHigh()"
+          >High</button>
         </div>
         <div class="input-wrap">
           <input
@@ -473,21 +508,25 @@
     <!-- Results -->
     <div id="output-section">
       <div class="shares-hero">
-        <div class="shares-number" id="out-shares">—</div>
+        <input class="shares-number" id="out-shares" type="text" inputmode="numeric"
+               placeholder="—" oninput="onSharesInput(this.value)">
         <div class="shares-label">Shares to Trade</div>
       </div>
-
       <div class="result-row">
         <span class="result-label">Risk $</span>
         <span class="result-value" id="out-risk">—</span>
       </div>
       <div class="result-row">
-        <span class="result-label">% of Capital</span>
-        <span class="result-value" id="out-capital-pct">—</span>
+        <span class="result-label">Risk Per Trade %</span>
+        <span class="result-value" id="out-risk-pct">—</span>
       </div>
       <div class="result-row">
-        <span class="result-label">Total Position</span>
+        <span class="result-label">Total Capital</span>
         <span class="result-value" id="out-total">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">% of Capital</span>
+        <span class="result-value" id="out-capital-pct">—</span>
       </div>
       <div class="result-row">
         <span class="result-label">Pivot %</span>
@@ -547,6 +586,8 @@
     adrError:      false,
     useAutoStop:   false,
     useAutoEntry:  false,
+    useAutoHigh:   false,
+    sharesOverride: null,
   };
 
   const state = { ...DEFAULT_STATE };
@@ -572,9 +613,14 @@
 
     if (riskPerShare <= 0) return null;
 
-    const quantity    = Math.floor(riskDollars / riskPerShare);
-    const totalValue  = quantity * entry;
-    const capitalPct  = (totalValue / equity) * 100;
+    const autoQuantity  = Math.floor(riskDollars / riskPerShare);
+    const ov            = s.sharesOverride;
+    const isOverride    = Number.isInteger(ov) && ov > 0;
+    const quantity      = isOverride ? ov : autoQuantity;
+
+    const effectiveRisk = quantity * riskPerShare;
+    const totalValue    = quantity * entry;
+    const capitalPct    = (totalValue / equity) * 100;
     const pivotPct    = ((stop - entry) / entry) * 100;
     const xADR       = s.adrData && pivotPct !== 0
       ? s.adrData.adr_pct / Math.abs(pivotPct)
@@ -596,7 +642,7 @@
     const adrTarget15 = s.adrData ? entry * (1 + s.adrData.adr_pct * 1.5 / 100) : null;
     const adrTarget2  = s.adrData ? entry * (1 + s.adrData.adr_pct * 2   / 100) : null;
 
-    return { riskDollars, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, thirdStop, earlyStop, twoThirdStop, adrTarget, adrTarget15, adrTarget2 };
+    return { riskDollars, effectiveRisk, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, thirdStop, earlyStop, twoThirdStop, adrTarget, adrTarget15, adrTarget2 };
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -611,6 +657,11 @@
     // Auto-entry sync
     if (state.useAutoEntry && state.adrData) {
       state.entry = String(state.adrData.current_price);
+    }
+
+    // Auto-high sync
+    if (state.useAutoHigh && state.adrData) {
+      state.entry = String(state.adrData.day_high);
     }
 
     const d = computeDerived(state);
@@ -636,6 +687,12 @@
     entryPill.disabled = !state.adrData;
     entryPill.className = 'autostop-pill' + (state.useAutoEntry ? ' active' : '');
 
+    // Auto-high pill
+    const highPill = document.getElementById('autohigh-pill');
+    highPill.textContent = 'High';
+    highPill.disabled = !state.adrData;
+    highPill.className = 'autostop-pill' + (state.useAutoHigh ? ' active' : '');
+
     // Input fields
     setInputIfNotFocused('input-equity', state.accountEquity);
     setInputIfNotFocused('input-risk',   state.riskPct);
@@ -643,10 +700,11 @@
     setInputIfNotFocused('input-stop',   state.stopLoss);
 
     // Outputs — always visible, show — when not yet computable
-    document.getElementById('out-shares').textContent = d ? d.quantity.toLocaleString() : '—';
-    document.getElementById('out-risk').textContent   = d ? '$' + fmt(d.riskDollars)    : '—';
+    setInputIfNotFocused('out-shares', d ? d.quantity.toLocaleString() : '');
+    document.getElementById('out-risk-pct').textContent    = d ? (d.effectiveRisk / parseFloat(state.accountEquity) * 100).toFixed(2) + '%' : '—';
+    document.getElementById('out-risk').textContent        = d ? '$' + fmt(d.effectiveRisk) : '—';
     document.getElementById('out-capital-pct').textContent = d ? d.capitalPct.toFixed(1) + '%' : '—';
-    document.getElementById('out-total').textContent  = d ? '$' + fmt(d.totalValue)     : '—';
+    document.getElementById('out-total').textContent       = d ? '$' + fmt(d.totalValue)    : '—';
 
     const pivotEl = document.getElementById('out-pivot');
     if (d) {
@@ -696,17 +754,26 @@
 
   // ── Event handlers ───────────────────────────────────────────────────────
   function setDirection(dir) {
-    setState({ direction: dir, useAutoStop: false, useAutoEntry: false });
+    setState({ direction: dir, useAutoStop: false, useAutoEntry: false, useAutoHigh: false, sharesOverride: null });
   }
 
   function onField(field, value) {
-    setState({ [field]: value });
+    const patch = { [field]: value };
+    if (['entry', 'stopLoss', 'riskPct'].includes(field)) patch.sharesOverride = null;
+    setState(patch);
   }
 
   function step(field, delta) {
     const current = parseFloat(state[field]) || 0;
-    const next = Math.round((current + delta) * 10) / 10;
-    setState({ [field]: String(next) });
+    const next    = Math.round((current + delta) * 10) / 10;
+    const patch   = { [field]: String(next) };
+    if (['entry', 'stopLoss', 'riskPct'].includes(field)) patch.sharesOverride = null;
+    setState(patch);
+  }
+
+  function onSharesInput(value) {
+    const raw = parseInt(value, 10);
+    setState({ sharesOverride: (Number.isInteger(raw) && raw > 0) ? raw : null });
   }
 
   function toggleAutoStop() {
@@ -716,7 +783,12 @@
 
   function toggleAutoEntry() {
     if (!state.adrData) return;
-    setState({ useAutoEntry: !state.useAutoEntry });
+    setState({ useAutoEntry: !state.useAutoEntry, useAutoHigh: false });
+  }
+
+  function toggleAutoHigh() {
+    if (!state.adrData) return;
+    setState({ useAutoHigh: !state.useAutoHigh, useAutoEntry: false });
   }
 
   function resetAll() {
@@ -748,7 +820,7 @@
 
   function onTickerInput(value) {
     stopLoadTimer();
-    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false, useAutoEntry: false });
+    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false, useAutoEntry: false, useAutoHigh: false });
     clearTimeout(debounceTimer);
     if (!value.trim()) return;
     setState({ adrLoading: true });
