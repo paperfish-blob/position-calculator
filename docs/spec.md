@@ -42,7 +42,7 @@ Recalculated reactively whenever any input changes. Returns `null` if any input 
 riskDollars  = accountEquity × (riskPct / 100)
 riskPerShare = entry − stopLoss        (long)
              = stopLoss − entry        (short)
-quantity     = floor(riskDollars / riskPerShare)
+quantity     = round(riskDollars / riskPerShare)
 totalValue   = quantity × entry
 capitalPct   = (totalValue / accountEquity) × 100
 pivotPct     = (stopLoss − entry) / entry × 100
@@ -133,7 +133,7 @@ Toggling direction or activating Auto-Entry resets `useAutoHigh` to `false`.
 
 | Field           | Shown when          | Value                                                      |
 |-----------------|---------------------|------------------------------------------------------------|
-| Shares to Trade | Result is valid     | `floor(riskDollars / riskPerShare)`                        |
+| Shares to Trade | Result is valid     | `round(riskDollars / riskPerShare)`                        |
 | Risk $          | Result is valid     | Dollar risk amount                                         |
 | % of Capital    | Result is valid     | `(totalValue / accountEquity) × 100`                       |
 | Total Position  | Result is valid     | Total position value at entry                              |

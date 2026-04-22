@@ -519,7 +519,11 @@
         <div class="shares-label">Shares to Trade</div>
       </div>
       <div class="result-row">
-        <span class="result-label">Risk $</span>
+        <span class="result-label">Planned Risk $</span>
+        <span class="result-value" id="out-risk-budget">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Actual Risk $</span>
         <span class="result-value" id="out-risk">—</span>
       </div>
       <div class="result-row">
@@ -619,7 +623,7 @@
 
     if (riskPerShare <= 0) return null;
 
-    const autoQuantity  = Math.floor(riskDollars / riskPerShare);
+    const autoQuantity  = Math.round(riskDollars / riskPerShare);
     const ov            = s.sharesOverride;
     const isOverride    = Number.isInteger(ov) && ov > 0;
     const quantity      = isOverride ? ov : autoQuantity;
@@ -712,6 +716,7 @@
 
     // Outputs — always visible, show — when not yet computable
     setInputIfNotFocused('out-shares', d ? d.quantity.toLocaleString() : '');
+    document.getElementById('out-risk-budget').textContent = d ? '$' + fmt(d.riskDollars)   : '—';
     document.getElementById('out-risk-pct').textContent    = d ? (d.effectiveRisk / parseFloat(state.accountEquity) * 100).toFixed(2) + '%' : '—';
     document.getElementById('out-risk').textContent        = d ? '$' + fmt(d.effectiveRisk) : '—';
     document.getElementById('out-capital-pct').textContent = d ? d.capitalPct.toFixed(1) + '%' : '—';
