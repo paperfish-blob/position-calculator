@@ -486,6 +486,12 @@
             disabled
             onclick="toggleAutoHigh()"
           >High</button>
+          <button
+            class="autostop-pill"
+            id="copy-pair-btn"
+            disabled
+            onclick="copyPair()"
+          >Copy</button>
         </div>
         <div class="input-wrap">
           <input
@@ -693,6 +699,11 @@
     highPill.disabled = !state.adrData;
     highPill.className = 'autostop-pill' + (state.useAutoHigh ? ' active' : '');
 
+    // Copy pill
+    const copyBtn = document.getElementById('copy-pair-btn');
+    const canCopy = !isNaN(parseFloat(state.stopLoss)) && !isNaN(parseFloat(state.entry));
+    copyBtn.disabled = !canCopy;
+
     // Input fields
     setInputIfNotFocused('input-equity', state.accountEquity);
     setInputIfNotFocused('input-risk',   state.riskPct);
@@ -789,6 +800,17 @@
   function toggleAutoHigh() {
     if (!state.adrData) return;
     setState({ useAutoHigh: !state.useAutoHigh, useAutoEntry: false });
+  }
+
+  function copyPair() {
+    const stop  = parseFloat(state.stopLoss);
+    const entry = parseFloat(state.entry);
+    if (isNaN(stop) || isNaN(entry)) return;
+    navigator.clipboard.writeText(stop + '\t' + entry).then(() => {
+      const btn = document.getElementById('copy-pair-btn');
+      btn.textContent = '✓';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+    });
   }
 
   function resetAll() {
