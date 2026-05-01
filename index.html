@@ -811,7 +811,8 @@
     const stop  = parseFloat(state.stopLoss);
     const entry = parseFloat(state.entry);
     if (isNaN(stop) || isNaN(entry)) return;
-    navigator.clipboard.writeText(stop + '\t' + entry).then(() => {
+    const adrPct = state.adrData ? state.adrData.adr_pct.toFixed(2) + '%' : '';
+    navigator.clipboard.writeText(stop + '\t' + entry + '\t' + adrPct).then(() => {
       const btn = document.getElementById('copy-pair-btn');
       btn.textContent = '✓';
       setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
