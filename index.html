@@ -259,6 +259,32 @@
 
     .two-col .field { margin-bottom: 0; }
 
+    /* ── Risk presets ── */
+    .risk-presets {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .risk-preset-btn {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border-radius: 20px;
+      padding: 2px 10px;
+      cursor: pointer;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-bg);
+      color: var(--accent);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .risk-preset-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
     /* ── Auto-stop pill ── */
     .autostop-pill {
       font-size: 0.65rem;
@@ -424,6 +450,11 @@
           oninput="onField('accountEquity', this.value)"
         >
       </div>
+      <div class="risk-presets" id="equity-presets">
+        <button class="risk-preset-btn" onclick="setEquityPreset('40000')">40k</button>
+        <button class="risk-preset-btn" onclick="setEquityPreset('50000')">50k</button>
+        <button class="risk-preset-btn" onclick="setEquityPreset('60000')">60k</button>
+      </div>
     </div>
 
     <!-- Risk % -->
@@ -441,6 +472,12 @@
           <button class="step-btn" onclick="step('riskPct', 0.1)">▲</button>
           <button class="step-btn" onclick="step('riskPct', -0.1)">▼</button>
         </div>
+      </div>
+      <div class="risk-presets" id="risk-presets">
+        <button class="risk-preset-btn" onclick="setRiskPreset('0.33')">0.33</button>
+        <button class="risk-preset-btn" onclick="setRiskPreset('0.5')">0.5</button>
+        <button class="risk-preset-btn" onclick="setRiskPreset('0.66')">0.66</button>
+        <button class="risk-preset-btn" onclick="setRiskPreset('1')">1</button>
       </div>
     </div>
 
@@ -465,8 +502,8 @@
             oninput="onField('stopLoss', this.value)"
           >
           <div class="steppers">
-            <button class="step-btn" onclick="step('stopLoss', 0.1)">▲</button>
-            <button class="step-btn" onclick="step('stopLoss', -0.1)">▼</button>
+            <button class="step-btn" onclick="step('stopLoss', 0.01)">▲</button>
+            <button class="step-btn" onclick="step('stopLoss', -0.01)">▼</button>
           </div>
         </div>
       </div>
@@ -502,8 +539,8 @@
             oninput="onField('entry', this.value)"
           >
           <div class="steppers">
-            <button class="step-btn" onclick="step('entry', 0.1)">▲</button>
-            <button class="step-btn" onclick="step('entry', -0.1)">▼</button>
+            <button class="step-btn" onclick="step('entry', 0.01)">▲</button>
+            <button class="step-btn" onclick="step('entry', -0.01)">▼</button>
           </div>
         </div>
       </div>
@@ -710,7 +747,14 @@
 
     // Input fields
     setInputIfNotFocused('input-equity', state.accountEquity);
+    document.querySelectorAll('#equity-presets .risk-preset-btn').forEach(btn => {
+      const eqMap = { 40000: '40k', 50000: '50k', 60000: '60k' };
+      btn.classList.toggle('active', btn.textContent === (eqMap[parseFloat(state.accountEquity)] || ''));
+    });
     setInputIfNotFocused('input-risk',   state.riskPct);
+    document.querySelectorAll('#risk-presets .risk-preset-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === String(parseFloat(state.riskPct) || ''));
+    });
     setInputIfNotFocused('input-entry',  state.entry);
     setInputIfNotFocused('input-stop',   state.stopLoss);
 
@@ -781,10 +825,20 @@
 
   function step(field, delta) {
     const current = parseFloat(state[field]) || 0;
-    const next    = Math.round((current + delta) * 10) / 10;
+    const next    = Math.round((current + delta) * 100) / 100;
     const patch   = { [field]: String(next) };
     if (['entry', 'stopLoss', 'riskPct'].includes(field)) patch.sharesOverride = null;
+    if (field === 'stopLoss') patch.useAutoStop = false;
+    if (field === 'entry')    { patch.useAutoEntry = false; patch.useAutoHigh = false; }
     setState(patch);
+  }
+
+  function setEquityPreset(val) {
+    setState({ accountEquity: val });
+  }
+
+  function setRiskPreset(val) {
+    setState({ riskPct: val, sharesOverride: null });
   }
 
   function onSharesInput(value) {
