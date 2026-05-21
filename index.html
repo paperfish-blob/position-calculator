@@ -392,6 +392,19 @@
     .result-value.positive { color: var(--green); }
     .result-value.negative { color: var(--red); }
     .result-value.accent   { color: var(--accent); }
+
+    input.result-value {
+      border: none;
+      background: transparent;
+      outline: none;
+      padding: 0;
+      cursor: text;
+      font-family: inherit;
+      caret-color: currentColor;
+      text-align: right;
+      width: 8ch;
+    }
+    input.result-value::placeholder { opacity: 0.35; }
   </style>
 </head>
 <body>
@@ -581,7 +594,8 @@
       </div>
       <div class="result-row" id="card-adr-pct">
         <span class="result-label">ADR %</span>
-        <span class="result-value accent" id="out-adr-pct">—</span>
+        <input class="result-value accent" id="out-adr-pct" type="text" inputmode="decimal"
+               placeholder="—" oninput="onAdrPctInput(this.value)">
       </div>
       <div class="result-row" id="card-xadr">
         <span class="result-label">xADR</span>
@@ -635,6 +649,7 @@
     useAutoEntry:  false,
     useAutoHigh:   false,
     sharesOverride: null,
+    adrPctOverride: null,
   };
 
   const state = { ...DEFAULT_STATE };
@@ -669,8 +684,11 @@
     const totalValue    = quantity * entry;
     const capitalPct    = (totalValue / equity) * 100;
     const pivotPct    = ((stop - entry) / entry) * 100;
-    const xADR       = s.adrData && pivotPct !== 0
-      ? s.adrData.adr_pct / Math.abs(pivotPct)
+    const effectiveAdrPct = s.adrPctOverride !== null ? s.adrPctOverride
+      : s.adrData ? s.adrData.adr_pct : null;
+
+    const xADR       = effectiveAdrPct !== null && pivotPct !== 0
+      ? effectiveAdrPct / Math.abs(pivotPct)
       : null;
 
     const thirdStop = s.direction === 'long'
@@ -685,9 +703,9 @@
       ? entry - riskPerShare * 2 / 3
       : entry + riskPerShare * 2 / 3;
 
-    const adrTarget   = s.adrData ? entry * (1 + s.adrData.adr_pct / 100)       : null;
-    const adrTarget15 = s.adrData ? entry * (1 + s.adrData.adr_pct * 1.5 / 100) : null;
-    const adrTarget2  = s.adrData ? entry * (1 + s.adrData.adr_pct * 2   / 100) : null;
+    const adrTarget   = effectiveAdrPct !== null ? entry * (1 + effectiveAdrPct / 100)       : null;
+    const adrTarget15 = effectiveAdrPct !== null ? entry * (1 + effectiveAdrPct * 1.5 / 100) : null;
+    const adrTarget2  = effectiveAdrPct !== null ? entry * (1 + effectiveAdrPct * 2   / 100) : null;
 
     return { riskDollars, effectiveRisk, riskPerShare, quantity, totalValue, capitalPct, pivotPct, xADR, thirdStop, earlyStop, twoThirdStop, adrTarget, adrTarget15, adrTarget2 };
   }
@@ -775,8 +793,9 @@
       pivotEl.className   = 'result-value';
     }
 
-    document.getElementById('out-adr-pct').textContent =
-      state.adrData ? state.adrData.adr_pct.toFixed(2) + '%' : '—';
+    const adrPctVal = state.adrPctOverride !== null ? state.adrPctOverride
+      : state.adrData ? state.adrData.adr_pct : null;
+    setInputIfNotFocused('out-adr-pct', adrPctVal !== null ? adrPctVal.toFixed(2) + '%' : '');
 
     document.getElementById('out-xadr').textContent =
       (d && d.xADR !== null) ? d.xADR.toFixed(2) + 'x' : '—';
@@ -846,6 +865,12 @@
     setState({ sharesOverride: (Number.isInteger(raw) && raw > 0) ? raw : null });
   }
 
+  function onAdrPctInput(value) {
+    const stripped = value.replace('%', '').trim();
+    const raw = parseFloat(stripped);
+    setState({ adrPctOverride: (!isNaN(raw) && raw > 0) ? raw : null });
+  }
+
   function toggleAutoStop() {
     if (!state.adrData) return;
     setState({ useAutoStop: !state.useAutoStop });
@@ -865,7 +890,8 @@
     const stop  = parseFloat(state.stopLoss);
     const entry = parseFloat(state.entry);
     if (isNaN(stop) || isNaN(entry)) return;
-    const adrPct = state.adrData ? state.adrData.adr_pct.toFixed(2) + '%' : '';
+    const adrPctNum = state.adrPctOverride !== null ? state.adrPctOverride : state.adrData ? state.adrData.adr_pct : null;
+    const adrPct = adrPctNum !== null ? adrPctNum.toFixed(2) + '%' : '';
     navigator.clipboard.writeText(stop + '\t' + entry + '\t' + adrPct).then(() => {
       const btn = document.getElementById('copy-pair-btn');
       btn.textContent = '✓';
@@ -902,7 +928,7 @@
 
   function onTickerInput(value) {
     stopLoadTimer();
-    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false, useAutoEntry: false, useAutoHigh: false });
+    setState({ ticker: value, adrData: null, adrLoading: false, adrError: false, useAutoStop: false, useAutoEntry: false, useAutoHigh: false, adrPctOverride: null });
     clearTimeout(debounceTimer);
     if (!value.trim()) return;
     setState({ adrLoading: true });
@@ -919,7 +945,7 @@
         return;
       }
       const data = await res.json();
-      setState({ adrData: data, adrLoading: false, adrError: false });
+      setState({ adrData: data, adrLoading: false, adrError: false, adrPctOverride: null });
     } catch {
       stopLoadTimer();
       setState({ adrData: null, adrLoading: false, adrError: true });
