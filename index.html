@@ -482,11 +482,12 @@
           oninput="onField('riskPct', this.value)"
         >
         <div class="steppers">
-          <button class="step-btn" onclick="step('riskPct', 0.1)">▲</button>
-          <button class="step-btn" onclick="step('riskPct', -0.1)">▼</button>
+          <button class="step-btn" onmousedown="pressStart('riskPct',0.1,event)" ontouchstart="pressStart('riskPct',0.1,event)" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchend="pressEnd()" ontouchcancel="pressEnd()">▲</button>
+          <button class="step-btn" onmousedown="pressStart('riskPct',-0.1,event)" ontouchstart="pressStart('riskPct',-0.1,event)" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchend="pressEnd()" ontouchcancel="pressEnd()">▼</button>
         </div>
       </div>
       <div class="risk-presets" id="risk-presets">
+        <button class="risk-preset-btn" onclick="setRiskPreset('0.25')">0.25</button>
         <button class="risk-preset-btn" onclick="setRiskPreset('0.33')">0.33</button>
         <button class="risk-preset-btn" onclick="setRiskPreset('0.5')">0.5</button>
         <button class="risk-preset-btn" onclick="setRiskPreset('0.66')">0.66</button>
@@ -515,8 +516,8 @@
             oninput="onField('stopLoss', this.value)"
           >
           <div class="steppers">
-            <button class="step-btn" onclick="step('stopLoss', 0.01)">▲</button>
-            <button class="step-btn" onclick="step('stopLoss', -0.01)">▼</button>
+            <button class="step-btn" onmousedown="pressStart('stopLoss',0.01,event)" ontouchstart="pressStart('stopLoss',0.01,event)" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchend="pressEnd()" ontouchcancel="pressEnd()">▲</button>
+            <button class="step-btn" onmousedown="pressStart('stopLoss',-0.01,event)" ontouchstart="pressStart('stopLoss',-0.01,event)" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchend="pressEnd()" ontouchcancel="pressEnd()">▼</button>
           </div>
         </div>
       </div>
@@ -552,8 +553,8 @@
             oninput="onField('entry', this.value)"
           >
           <div class="steppers">
-            <button class="step-btn" onclick="step('entry', 0.01)">▲</button>
-            <button class="step-btn" onclick="step('entry', -0.01)">▼</button>
+            <button class="step-btn" onmousedown="pressStart('entry',0.01,event)" ontouchstart="pressStart('entry',0.01,event)" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchend="pressEnd()" ontouchcancel="pressEnd()">▲</button>
+            <button class="step-btn" onmousedown="pressStart('entry',-0.01,event)" ontouchstart="pressStart('entry',-0.01,event)" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchend="pressEnd()" ontouchcancel="pressEnd()">▼</button>
           </div>
         </div>
       </div>
@@ -637,7 +638,7 @@
   // ── State ────────────────────────────────────────────────────────────────
   const DEFAULT_STATE = {
     direction:     'long',
-    accountEquity: '40000',
+    accountEquity: '60000',
     riskPct:       '0.33',
     entry:         '',
     stopLoss:      '',
@@ -852,6 +853,21 @@
     if (field === 'stopLoss') patch.useAutoStop = false;
     if (field === 'entry')    { patch.useAutoEntry = false; patch.useAutoHigh = false; }
     setState(patch);
+  }
+
+  let _pressTimer = null, _pressInterval = null;
+  function pressStart(field, delta, e) {
+    e.preventDefault();
+    step(field, delta);
+    _pressTimer = setTimeout(() => {
+      _pressInterval = setInterval(() => step(field, delta), 50);
+    }, 400);
+  }
+  function pressEnd() {
+    clearTimeout(_pressTimer);
+    clearInterval(_pressInterval);
+    _pressTimer = null;
+    _pressInterval = null;
   }
 
   function setEquityPreset(val) {
