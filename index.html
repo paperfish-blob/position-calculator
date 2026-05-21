@@ -778,7 +778,9 @@
 
     // Outputs — always visible, show — when not yet computable
     setInputIfNotFocused('out-shares', d ? d.quantity.toLocaleString() : '');
-    document.getElementById('out-risk-budget').textContent = d ? '$' + fmt(d.riskDollars)   : '—';
+    const _eq = parseFloat(state.accountEquity), _rp = parseFloat(state.riskPct);
+    const plannedRisk = (_eq > 0 && _rp > 0) ? _eq * (_rp / 100) : null;
+    document.getElementById('out-risk-budget').textContent = plannedRisk !== null ? '$' + fmt(plannedRisk) : '—';
     document.getElementById('out-risk-pct').textContent    = d ? (d.effectiveRisk / parseFloat(state.accountEquity) * 100).toFixed(2) + '%' : '—';
     document.getElementById('out-risk').textContent        = d ? '$' + fmt(d.effectiveRisk) : '—';
     document.getElementById('out-capital-pct').textContent = d ? d.capitalPct.toFixed(1) + '%' : '—';
