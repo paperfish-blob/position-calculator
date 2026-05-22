@@ -583,7 +583,8 @@
       </div>
       <div class="result-row">
         <span class="result-label">Total Capital</span>
-        <span class="result-value" id="out-total">—</span>
+        <input class="result-value" id="out-total" type="text" inputmode="decimal"
+               placeholder="—" oninput="onTotalCapitalInput(this.value)">
       </div>
       <div class="result-row">
         <span class="result-label">% of Capital</span>
@@ -785,7 +786,7 @@
     document.getElementById('out-risk-pct').textContent    = d ? (d.effectiveRisk / parseFloat(state.accountEquity) * 100).toFixed(2) + '%' : '—';
     document.getElementById('out-risk').textContent        = d ? '$' + fmt(d.effectiveRisk) : '—';
     document.getElementById('out-capital-pct').textContent = d ? d.capitalPct.toFixed(1) + '%' : '—';
-    document.getElementById('out-total').textContent       = d ? '$' + fmt(d.totalValue)    : '—';
+    setInputIfNotFocused('out-total', d ? '$' + fmt(d.totalValue) : '');
 
     const pivotEl = document.getElementById('out-pivot');
     if (d) {
@@ -881,6 +882,18 @@
   function onSharesInput(value) {
     const raw = parseInt(value, 10);
     setState({ sharesOverride: (Number.isInteger(raw) && raw > 0) ? raw : null });
+  }
+
+  function onTotalCapitalInput(value) {
+    const stripped = value.replace(/[$,]/g, '').trim();
+    const capital = parseFloat(stripped);
+    const entry   = parseFloat(state.entry);
+    if (capital > 0 && entry > 0) {
+      const shares = Math.round(capital / entry);
+      setState({ sharesOverride: shares > 0 ? shares : null });
+    } else {
+      setState({ sharesOverride: null });
+    }
   }
 
   function onAdrPctInput(value) {
