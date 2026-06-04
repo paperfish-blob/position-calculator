@@ -575,7 +575,8 @@
       </div>
       <div class="result-row">
         <span class="result-label">Actual Risk $</span>
-        <span class="result-value" id="out-risk">—</span>
+        <input class="result-value" id="out-risk" type="text" inputmode="decimal"
+               placeholder="—" oninput="onActualRiskInput(this.value)">
       </div>
       <div class="result-row">
         <span class="result-label">Risk Per Trade %</span>
@@ -784,7 +785,7 @@
     const plannedRisk = (_eq > 0 && _rp > 0) ? _eq * (_rp / 100) : null;
     document.getElementById('out-risk-budget').textContent = plannedRisk !== null ? '$' + fmt(plannedRisk) : '—';
     document.getElementById('out-risk-pct').textContent    = d ? (d.effectiveRisk / parseFloat(state.accountEquity) * 100).toFixed(2) + '%' : '—';
-    document.getElementById('out-risk').textContent        = d ? '$' + fmt(d.effectiveRisk) : '—';
+    setInputIfNotFocused('out-risk', d ? '$' + fmt(d.effectiveRisk) : '');
     document.getElementById('out-capital-pct').textContent = d ? d.capitalPct.toFixed(1) + '%' : '—';
     setInputIfNotFocused('out-total', d ? '$' + fmt(d.totalValue) : '');
 
@@ -890,6 +891,20 @@
     const entry   = parseFloat(state.entry);
     if (capital > 0 && entry > 0) {
       const shares = Math.round(capital / entry);
+      setState({ sharesOverride: shares > 0 ? shares : null });
+    } else {
+      setState({ sharesOverride: null });
+    }
+  }
+
+  function onActualRiskInput(value) {
+    const stripped = value.replace(/[$,]/g, '').trim();
+    const riskDollars = parseFloat(stripped);
+    const entry = parseFloat(state.entry);
+    const stop  = parseFloat(state.stopLoss);
+    const riskPerShare = state.direction === 'long' ? entry - stop : stop - entry;
+    if (riskDollars > 0 && riskPerShare > 0) {
+      const shares = Math.round(riskDollars / riskPerShare);
       setState({ sharesOverride: shares > 0 ? shares : null });
     } else {
       setState({ sharesOverride: null });
