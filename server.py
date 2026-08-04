@@ -25,7 +25,14 @@ def compute_adr(ticker: str) -> dict:
     if yf is None:
         raise RuntimeError('yfinance is not installed')
 
-    hist = yf.Ticker(ticker).history(period='1mo')
+    try:
+        hist = yf.Ticker(ticker).history(period='1mo')
+    except Exception as e:
+        raise ValueError(f'ticker not found: {e}')
+
+    # yfinance appends a row for the unsettled session with NaN OHLC (volume only);
+    # drop it so the last row is always a completed bar.
+    hist = hist.dropna(subset=['Open', 'High', 'Low', 'Close'])
     if hist.empty or len(hist) < 5:
         raise ValueError('ticker not found or insufficient data')
 
@@ -54,7 +61,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         print(f'[{self.address_string()}] {format % args}')
 
     def _send_json(self, data: dict, status: int = 200) -> None:
-        body = json.dumps(data).encode()
+        try:
+            # allow_nan=False: NaN/Infinity are not valid JSON and would make the
+            # browser's res.json() throw on an otherwise-200 response.
+            body = json.dumps(data, allow_nan=False).encode()
+        except ValueError as e:
+            print(f'Refusing to send non-JSON-serializable payload: {e} -- {data}')
+            body = json.dumps({'error': 'internal server error'}).encode()
+            status = 500
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', str(len(body)))

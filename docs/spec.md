@@ -71,12 +71,16 @@ GET /api/adr/{ticker}
 
 1. Checks a module-level TTL cache (`CACHE`) keyed by ticker. Returns cached data if not expired (5-min TTL).
 2. Calls `yfinance.Ticker(ticker).history(period='1mo')` to fetch ~20+ trading days of OHLCV.
-3. Slices the last 20 rows and computes:
+3. Drops rows with NaN `Open`/`High`/`Low`/`Close`. yfinance appends a row for the
+   current unsettled session carrying volume but no OHLC; without this the last row
+   would yield `NaN` for `day_low`/`day_high`/`current_price`.
+4. Slices the last 20 remaining rows and computes:
    - **ADR $** — `mean(High − Low)` over 20 days
    - **ADR %** — `mean((High − Low) / Close × 100)` over 20 days
-   - **day_low** — `Low` of the most recent session
-   - **day_high** — `High` of the most recent session
-4. Returns HTTP 404 if ticker is not found or data is insufficient.
+   - **day_low** — `Low` of the most recent completed session
+   - **day_high** — `High` of the most recent completed session
+5. Returns HTTP 404 if ticker is not found or data is insufficient. yfinance raising
+   on an unknown symbol is treated the same as an empty DataFrame.
 
 ### Response shape
 
@@ -96,8 +100,12 @@ GET /api/adr/{ticker}
 | Status | Body                                          | When                              |
 |--------|-----------------------------------------------|-----------------------------------|
 | 400    | `{"error": "ticker required"}`                | Empty ticker segment in path      |
-| 404    | `{"error": "ticker not found or insufficient data"}` | yfinance returns empty DataFrame  |
-| 500    | `{"error": "internal server error"}`          | Unexpected exception              |
+| 404    | `{"error": "ticker not found or insufficient data"}` | yfinance returns empty DataFrame or raises |
+| 500    | `{"error": "internal server error"}`          | Unexpected exception, or payload not JSON-serializable |
+
+Responses are serialized with `allow_nan=False`, so a `NaN` can never ship inside an
+otherwise-200 body — the request fails loudly as a 500 instead of returning JSON that
+the browser's `res.json()` rejects.
 
 ---
 
